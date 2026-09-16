@@ -1,0 +1,880 @@
+{
+  "mode": "baseline",
+  "model": null,
+  "now": "2026-09-17T18:30:00+08:00",
+  "drafts": {
+    "accuracy": 0.37,
+    "correct": 10,
+    "total": 27,
+    "false_trigger_rate": 1,
+    "false_triggers": "11/11",
+    "perClass": {
+      "task": {
+        "precision": 0.57,
+        "recall": 0.57
+      },
+      "knowledge": {
+        "precision": 1,
+        "recall": 0.71
+      },
+      "mixed": {
+        "precision": 0.07,
+        "recall": 0.5
+      },
+      "none": {
+        "precision": null,
+        "recall": 0
+      }
+    },
+    "confusion": {
+      "task": {
+        "task": 4,
+        "knowledge": 0,
+        "mixed": 3,
+        "none": 0
+      },
+      "knowledge": {
+        "task": 0,
+        "knowledge": 5,
+        "mixed": 2,
+        "none": 0
+      },
+      "mixed": {
+        "task": 1,
+        "knowledge": 0,
+        "mixed": 1,
+        "none": 0
+      },
+      "none": {
+        "task": 2,
+        "knowledge": 0,
+        "mixed": 9,
+        "none": 0
+      }
+    }
+  },
+  "messages": {
+    "speech_act": "8/24",
+    "needs_counterpart": "12/15",
+    "reusable": "7/14",
+    "updates": "1/5",
+    "answers_message_id": "0/3"
+  },
+  "events": {
+    "state_accuracy": "1/4",
+    "states": [
+      {
+        "id": "m-101",
+        "gold": "fulfilled",
+        "pred": "open"
+      },
+      {
+        "id": "m-102",
+        "gold": "full",
+        "pred": "not_detected"
+      },
+      {
+        "id": "m-104",
+        "gold": "full",
+        "pred": "open"
+      },
+      {
+        "id": "m-107",
+        "gold": "open",
+        "pred": "open"
+      }
+    ],
+    "actionable_pred": [
+      "m-101",
+      "m-104",
+      "m-107"
+    ],
+    "actionable_gold": [
+      "m-107"
+    ],
+    "actionable_exact_match": false
+  },
+  "errors": {
+    "drafts": [
+      {
+        "id": "d01",
+        "text": "周六有人一起去 Costco 吗？",
+        "gold": "task",
+        "pred": "mixed",
+        "note": "中文请求以吗结尾"
+      },
+      {
+        "id": "d03",
+        "text": "明天下午有人拼车去机场吗",
+        "gold": "task",
+        "pred": "mixed"
+      },
+      {
+        "id": "d07",
+        "text": "今晚谁去食堂，带我一个",
+        "gold": "task",
+        "pred": "mixed"
+      },
+      {
+        "id": "d13",
+        "text": "有人知道 118 路周日几点有车吗？",
+        "gold": "knowledge",
+        "pred": "mixed",
+        "note": "有人+时间，但仍是信息问题"
+      },
+      {
+        "id": "d14",
+        "text": "Does anyone know where to apply for a parking permit?",
+        "gold": "knowledge",
+        "pred": "mixed",
+        "note": "anyone 陷阱"
+      },
+      {
+        "id": "d16",
+        "text": "Anyone heading to Trader Joe's Sunday? Also, which bus goes there?",
+        "gold": "mixed",
+        "pred": "task"
+      },
+      {
+        "id": "d17",
+        "text": "上次和室友一起去的 Costco，人超多",
+        "gold": "none",
+        "pred": "task",
+        "note": "过去经历含一起"
+      },
+      {
+        "id": "d18",
+        "text": "I went grocery shopping last weekend, the line was long.",
+        "gold": "none",
+        "pred": "mixed"
+      },
+      {
+        "id": "d19",
+        "text": "哈哈哈好的",
+        "gold": "none",
+        "pred": "mixed"
+      },
+      {
+        "id": "d20",
+        "text": "今天好累啊",
+        "gold": "none",
+        "pred": "mixed"
+      },
+      {
+        "id": "d21",
+        "text": "Thanks everyone!",
+        "gold": "none",
+        "pred": "mixed"
+      },
+      {
+        "id": "d22",
+        "text": "这门课真的很好",
+        "gold": "none",
+        "pred": "mixed"
+      },
+      {
+        "id": "d23",
+        "text": "Costco",
+        "gold": "none",
+        "pred": "mixed",
+        "note": "单个关键词"
+      },
+      {
+        "id": "d24",
+        "text": "好的，周六见",
+        "gold": "none",
+        "pred": "mixed",
+        "note": "确认"
+      },
+      {
+        "id": "d25",
+        "text": "我车满了，谢谢大家",
+        "gold": "none",
+        "pred": "mixed",
+        "note": "状态更新"
+      },
+      {
+        "id": "d26",
+        "text": "搭车的事已经解决了",
+        "gold": "none",
+        "pred": "task",
+        "note": "状态更新"
+      },
+      {
+        "id": "d27",
+        "text": "grocery",
+        "gold": "none",
+        "pred": "mixed"
+      }
+    ]
+  },
+  "raw": {
+    "drafts": [
+      {
+        "id": "d01",
+        "text": "周六有人一起去 Costco 吗？",
+        "gold": "task",
+        "pred": {
+          "route": "mixed"
+        },
+        "note": "中文请求以吗结尾"
+      },
+      {
+        "id": "d02",
+        "text": "Anyone going grocery shopping this weekend?",
+        "gold": "task",
+        "pred": {
+          "route": "task"
+        }
+      },
+      {
+        "id": "d03",
+        "text": "明天下午有人拼车去机场吗",
+        "gold": "task",
+        "pred": {
+          "route": "mixed"
+        }
+      },
+      {
+        "id": "d04",
+        "text": "I can drive to Target on Sunday, anyone need a ride?",
+        "gold": "task",
+        "pred": {
+          "route": "task"
+        },
+        "note": "提供型"
+      },
+      {
+        "id": "d05",
+        "text": "找个人周末一起去超市",
+        "gold": "task",
+        "pred": {
+          "route": "task"
+        }
+      },
+      {
+        "id": "d06",
+        "text": "Looking for someone to split an Uber to the airport Friday",
+        "gold": "task",
+        "pred": {
+          "route": "task"
+        }
+      },
+      {
+        "id": "d07",
+        "text": "今晚谁去食堂，带我一个",
+        "gold": "task",
+        "pred": {
+          "route": "mixed"
+        }
+      },
+      {
+        "id": "d08",
+        "text": "没有车怎么去 Costco？",
+        "gold": "knowledge",
+        "pred": {
+          "route": "knowledge"
+        }
+      },
+      {
+        "id": "d09",
+        "text": "How do I get to Costco without a car?",
+        "gold": "knowledge",
+        "pred": {
+          "route": "knowledge"
+        }
+      },
+      {
+        "id": "d10",
+        "text": "停车证在哪里申请？",
+        "gold": "knowledge",
+        "pred": {
+          "route": "knowledge"
+        }
+      },
+      {
+        "id": "d11",
+        "text": "图书馆打印多少钱",
+        "gold": "knowledge",
+        "pred": {
+          "route": "knowledge"
+        }
+      },
+      {
+        "id": "d12",
+        "text": "What's the parking permit process?",
+        "gold": "knowledge",
+        "pred": {
+          "route": "knowledge"
+        }
+      },
+      {
+        "id": "d13",
+        "text": "有人知道 118 路周日几点有车吗？",
+        "gold": "knowledge",
+        "pred": {
+          "route": "mixed"
+        },
+        "note": "有人+时间，但仍是信息问题"
+      },
+      {
+        "id": "d14",
+        "text": "Does anyone know where to apply for a parking permit?",
+        "gold": "knowledge",
+        "pred": {
+          "route": "mixed"
+        },
+        "note": "anyone 陷阱"
+      },
+      {
+        "id": "d15",
+        "text": "周六有人去 Costco 吗？没车的话一般怎么过去？",
+        "gold": "mixed",
+        "pred": {
+          "route": "mixed"
+        }
+      },
+      {
+        "id": "d16",
+        "text": "Anyone heading to Trader Joe's Sunday? Also, which bus goes there?",
+        "gold": "mixed",
+        "pred": {
+          "route": "task"
+        }
+      },
+      {
+        "id": "d17",
+        "text": "上次和室友一起去的 Costco，人超多",
+        "gold": "none",
+        "pred": {
+          "route": "task"
+        },
+        "note": "过去经历含一起"
+      },
+      {
+        "id": "d18",
+        "text": "I went grocery shopping last weekend, the line was long.",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        }
+      },
+      {
+        "id": "d19",
+        "text": "哈哈哈好的",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        }
+      },
+      {
+        "id": "d20",
+        "text": "今天好累啊",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        }
+      },
+      {
+        "id": "d21",
+        "text": "Thanks everyone!",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        }
+      },
+      {
+        "id": "d22",
+        "text": "这门课真的很好",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        }
+      },
+      {
+        "id": "d23",
+        "text": "Costco",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        },
+        "note": "单个关键词"
+      },
+      {
+        "id": "d24",
+        "text": "好的，周六见",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        },
+        "note": "确认"
+      },
+      {
+        "id": "d25",
+        "text": "我车满了，谢谢大家",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        },
+        "note": "状态更新"
+      },
+      {
+        "id": "d26",
+        "text": "搭车的事已经解决了",
+        "gold": "none",
+        "pred": {
+          "route": "task"
+        },
+        "note": "状态更新"
+      },
+      {
+        "id": "d27",
+        "text": "grocery",
+        "gold": "none",
+        "pred": {
+          "route": "mixed"
+        }
+      }
+    ],
+    "messages": [
+      {
+        "id": "m-101",
+        "gold": {
+          "speech_act": [
+            "request"
+          ],
+          "needs_counterpart": true,
+          "reusable": false
+        },
+        "pred": {
+          "speech_act": "request",
+          "needs_counterpart": true,
+          "reusable": false,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-102",
+        "gold": {
+          "speech_act": [
+            "offer"
+          ],
+          "needs_counterpart": true,
+          "reusable": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-103",
+        "gold": {
+          "speech_act": [
+            "status_update",
+            "acknowledgement"
+          ],
+          "updates": {
+            "target_message_id": "m-101",
+            "new_state": "fulfilled"
+          }
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-104",
+        "gold": {
+          "speech_act": [
+            "request"
+          ],
+          "needs_counterpart": true,
+          "reusable": false
+        },
+        "pred": {
+          "speech_act": "request",
+          "needs_counterpart": true,
+          "reusable": false,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-105",
+        "gold": {
+          "speech_act": [
+            "status_update"
+          ],
+          "updates": {
+            "target_message_id": "m-104",
+            "new_state": "full"
+          }
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": true
+        }
+      },
+      {
+        "id": "m-106",
+        "gold": {
+          "speech_act": [
+            "experience"
+          ],
+          "needs_counterpart": false,
+          "reusable": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-107",
+        "gold": {
+          "speech_act": [
+            "request"
+          ],
+          "needs_counterpart": true,
+          "reusable": false
+        },
+        "pred": {
+          "speech_act": "request",
+          "needs_counterpart": true,
+          "reusable": false,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-108",
+        "gold": {
+          "speech_act": [
+            "status_update"
+          ],
+          "updates": {
+            "target_message_id": "m-102",
+            "new_state": "full"
+          }
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": true
+        }
+      },
+      {
+        "id": "m-201",
+        "gold": {
+          "speech_act": [
+            "question"
+          ],
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-202",
+        "gold": {
+          "speech_act": [
+            "answer"
+          ],
+          "reusable": true,
+          "answers_message_id": "m-201"
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-203",
+        "gold": {
+          "speech_act": [
+            "answer"
+          ],
+          "reusable": true,
+          "answers_message_id": "m-201"
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-204",
+        "gold": {
+          "speech_act": [
+            "question"
+          ],
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-205",
+        "gold": {
+          "speech_act": [
+            "answer"
+          ],
+          "reusable": true,
+          "answers_message_id": "m-204"
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-206",
+        "gold": {
+          "speech_act": [
+            "acknowledgement"
+          ],
+          "reusable": false,
+          "updates": null
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-207",
+        "gold": {
+          "speech_act": [
+            "question"
+          ],
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "request",
+          "needs_counterpart": true,
+          "reusable": false,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-208",
+        "gold": {
+          "speech_act": [
+            "question"
+          ],
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-209",
+        "gold": {
+          "speech_act": [
+            "experience",
+            "chitchat"
+          ],
+          "reusable": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-210",
+        "gold": {
+          "speech_act": [
+            "answer"
+          ],
+          "reusable": true,
+          "updates": {
+            "target_message_id": "m-202",
+            "new_state": "corrected"
+          }
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-211",
+        "gold": {
+          "speech_act": [
+            "question"
+          ],
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "request",
+          "needs_counterpart": true,
+          "reusable": false,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-212",
+        "gold": {
+          "speech_act": [
+            "question"
+          ],
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-301",
+        "gold": {
+          "speech_act": [
+            "acknowledgement",
+            "chitchat"
+          ],
+          "reusable": false,
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-302",
+        "gold": {
+          "speech_act": [
+            "chitchat",
+            "experience"
+          ],
+          "reusable": false,
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-304",
+        "gold": {
+          "speech_act": [
+            "request",
+            "question"
+          ],
+          "needs_counterpart": true
+        },
+        "pred": {
+          "speech_act": "request",
+          "needs_counterpart": true,
+          "reusable": false,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      },
+      {
+        "id": "m-305",
+        "gold": {
+          "speech_act": [
+            "chitchat"
+          ],
+          "reusable": false,
+          "needs_counterpart": false
+        },
+        "pred": {
+          "speech_act": "answer",
+          "needs_counterpart": false,
+          "reusable": true,
+          "answers_message_id": null,
+          "updates": null,
+          "closed_by_own_text": false
+        }
+      }
+    ]
+  }
+}

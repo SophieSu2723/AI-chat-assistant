@@ -1,0 +1,78 @@
+{
+  "draft_intent": {
+    "name": "classify_draft",
+    "description": "输出草稿的意图识别结果",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "route": { "type": "string", "enum": ["task", "knowledge", "mixed", "none"] },
+        "intent_acts": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["coordination_request", "coordination_offer", "info_question", "experience", "status_update", "chitchat", "other"] }
+        },
+        "time_anchor": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["future_specific", "future_vague", "past", "none"] },
+            "text": { "type": ["string", "null"] }
+          },
+          "required": ["type", "text"]
+        },
+        "needs_counterpart": { "type": "boolean" },
+        "info_need": { "type": ["string", "null"], "description": "knowledge 或 mixed 时，用一句话概括要查询的问题" },
+        "entities": {
+          "type": "object",
+          "properties": {
+            "place": { "type": ["string", "null"] },
+            "activity": { "type": ["string", "null"] },
+            "item": { "type": ["string", "null"] }
+          },
+          "required": ["place", "activity", "item"]
+        },
+        "certainty": { "type": "string", "enum": ["clear", "unclear"] },
+        "evidence_span": { "type": ["string", "null"] }
+      },
+      "required": ["route", "intent_acts", "time_anchor", "needs_counterpart", "info_need", "entities", "certainty", "evidence_span"]
+    }
+  },
+  "message_classify": {
+    "name": "classify_message",
+    "description": "输出单条群消息的结构化结果",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "speech_act": { "type": "string", "enum": ["request", "offer", "question", "answer", "experience", "status_update", "acknowledgement", "chitchat"] },
+        "time_anchor": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["future_specific", "future_vague", "past", "none"] },
+            "text": { "type": ["string", "null"] }
+          },
+          "required": ["type", "text"]
+        },
+        "needs_counterpart": { "type": "boolean" },
+        "reusable": { "type": "boolean" },
+        "answers_message_id": { "type": ["string", "null"] },
+        "updates": {
+          "type": ["object", "null"],
+          "properties": {
+            "target_message_id": { "type": "string" },
+            "new_state": { "type": "string", "enum": ["full", "cancelled", "rescheduled", "fulfilled", "corrected"] }
+          },
+          "required": ["target_message_id", "new_state"]
+        },
+        "entities": {
+          "type": "object",
+          "properties": {
+            "place": { "type": ["string", "null"] },
+            "activity": { "type": ["string", "null"] },
+            "item": { "type": ["string", "null"] }
+          },
+          "required": ["place", "activity", "item"]
+        },
+        "evidence_span": { "type": "string" }
+      },
+      "required": ["speech_act", "time_anchor", "needs_counterpart", "reusable", "answers_message_id", "updates", "entities", "evidence_span"]
+    }
+  }
+}
