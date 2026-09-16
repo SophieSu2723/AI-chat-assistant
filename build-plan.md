@@ -1,74 +1,134 @@
-# 分步开发清单
+# Step-by-Step Build Plan
 
-本清单面向开发者与编码助手。产品约束以根目录 README.md 为准。每完成一步，说明修改内容、验证方式与尚未实现的能力，避免一次扩展整个产品。
+Read [README.md](README.md) first. Both Immediate Task Cards and Knowledge Cards are required for the MVP. Build in small increments; after each step, report changes, checks, and remaining limitations. All checkboxes below are planned work, not completed features.
 
-## 1. 初始化与数据
+## 1. Project Setup and Shared Fixtures
 
-- [ ] 初始化 React + TypeScript 项目，添加启动与构建说明。
-- [ ] 创建约 50 条虚构中英混合消息，含唯一 ID、群 ID、发送者 ID、正文、发送时间和可选 replyToId。
-- [ ] 固定 demo 当前时间与时区，显示在演示说明中。
-- [ ] 覆盖有效同行、不同日期、找/提供 ride、闲聊、超过 72 小时、取消、改期、已满等情况。
-- [ ] 单独记录样例输入和人工预期结果，作为后续 AI 评估依据。
+- [ ] Initialize React + TypeScript; document install, run, and build commands.
+- [ ] Create approximately 70–100 fictional bilingual group messages with IDs, authors, timestamps, group IDs, and reply links.
+- [ ] Fix and display a demo clock and time zone.
+- [ ] Include task requests, offers, different dates, cancellations, full-capacity updates, expired requests, and irrelevant conversation.
+- [ ] Include repeated questions with substantive answers; a single excellent answer; repeated unanswered questions; vague popular comments; conflicting experiences; outdated advice; and a later correction.
+- [ ] Include knowledge sources older than 72 hours to verify that task expiry rules do not remove reusable knowledge.
+- [ ] Write expected outcomes and source IDs for both card types, reserving some cases for later evaluation.
 
-验收：能手动判断每条候选为何相关或不相关；示例不随真实日期推移失效。
+Acceptance: Every fixture has an explainable expected result. Demo examples remain repeatable as real time advances.
 
-## 2. 群聊与轻提示
+## 2. Shared Chat Interface and Intent Routing
 
-- [ ] 消息流、输入框、群消息发送。
-- [ ] 模拟规则识别明确协调意图，等待约 800ms，兼容中文输入法。
-- [ ] 单行私人提示、关闭操作、主动查找入口。
-- [ ] 保持输入位置稳定，快速改写时不显示过时结果。
-- [ ] 加载、主动查找无结果、失败重试状态。
+- [ ] Build group feed, composer, message sending, and manual search.
+- [ ] Simulate routing to coordination, knowledge, mixed/unclear, or no action.
+- [ ] Wait approximately 800ms after typing stops; support Chinese IME composition.
+- [ ] Show one private compact prompt; open labeled sections for mixed results instead of stacking prompts.
+- [ ] Preserve drafts, respect dismissal, invalidate stale results, and keep the composer stable.
+- [ ] Add loading, manual no-results, and retry states. Automatic no-results stays quiet.
 
-验收：「周末有人去超市吗」触发；「昨天去超市好累」不触发。关闭后同一次草稿不再弹出；忽略提示仍可正常发送。
+Acceptance: “Anyone going shopping?” routes to tasks; “How do I get there without a car?” routes to knowledge; a past shopping anecdote triggers neither. Sending is never blocked.
 
-## 3. 列表与原消息
+## 3. Immediate Task Cards and Source Viewer
 
-- [ ] 底部面板呈现紧凑需求列表。
-- [ ] 打开面板保留草稿，关闭后恢复输入上下文。
-- [ ] 原消息详情包含后续修正及来源，未知信息不补全。
-- [ ] 支持键盘操作、焦点返回和可读的按钮标签。
+- [ ] Render compact results in a bottom sheet with author, original excerpt, date, location, and availability uncertainty.
+- [ ] Enforce the 72-hour request window plus event relevance; include corrections and cancellations.
+- [ ] Build a reusable source viewer that opens and highlights specific messages and surrounding replies.
+- [ ] Preserve focus and drafts, support keyboard navigation, and check mobile keyboard behavior.
 
-验收：用户能比较日期、地点与需求；来源正确；列表不因键盘而无法操作。
+Acceptance: Results do not invent availability; canceled/full requests are not suggested as actionable; sources and follow-ups are inspectable.
 
-## 4. 事项聊天
+## 4. Temporary Conversations
 
-- [ ] 点击「聊聊这件事」打开草稿，保留原需求引用。
-- [ ] 可编辑开场白，真正发送时才创建会话。
-- [ ] 用原需求 ID 与双方 ID 识别已有会话，防止重复。
-- [ ] 对方模拟回复明确标识，事项消息不进入大群。
-- [ ] 「正在沟通」显示已有会话并允许重新进入。
+- [ ] “Chat about this” opens an editable draft with the original request attached.
+- [ ] Create a conversation only when the first message is sent.
+- [ ] Deduplicate by request ID and participant pair.
+- [ ] Add explicitly simulated replies and an “Ongoing chats” list.
+- [ ] Keep these messages outside the main group and out of knowledge-generation sources.
 
-验收：仅查看不联系；发送后能返回继续聊；重复点击不新建重复会话。
+Acceptance: Opening does not notify or send. Users can return to the same conversation without duplicates.
 
-## 5. 本地持久化
+## 5. Knowledge Eligibility and Draft Creation
 
-- [ ] 保存草稿、会话、会话消息；处理不存在或损坏的存储数据。
-- [ ] 添加重置演示操作，清除本产品数据而非浏览器其他数据。
+- [ ] Implement mock eligibility decisions for reusable, substantive, source-backed content.
+- [ ] Record reasons and source message IDs. Repetition affects priority, never eligibility by itself.
+- [ ] Count distinct question episodes; avoid counting copied replies as independent evidence.
+- [ ] Add private AI-discovered candidates and a member-initiated “Save as knowledge” action.
+- [ ] Reuse an existing candidate for the same question and compatible context; preserve genuinely different conditions.
+- [ ] Return an explicit insufficient-answer outcome for unanswered or vague discussions.
 
-验收：刷新后记录可恢复，重置后回到初始 demo。注明数据仅在当前浏览器保存。
+Acceptance: One detailed answer can qualify; ten unanswered repetitions or a highly liked vague opinion cannot. Manual creation cannot bypass the evidence requirement.
 
-## 6. 真实 AI 匹配
+## 6. Knowledge Cards, Review, and Retrieval
 
-仅在前五步通过后开始，需要服务端及用户配置的模型凭证。
+- [ ] Build question-centered cards with claim-level sources, applicability, disagreements, unknowns, and separate source/generated/review dates.
+- [ ] Add private drafts and a “Group knowledge” area for published cards.
+- [ ] Provide clearly labeled simulated reviewer mode to edit and publish; record reviewer and review time only after that action.
+- [ ] Distinguish personal save from shared publication.
+- [ ] Retrieve published, applicable cards when a related question is typed; do not apply the task-only 72-hour cutoff.
+- [ ] Open claims in the shared source viewer.
+- [ ] Handle follow-ups using existing evidence; show gaps and offer an editable group question, never automatic posting.
 
-- [ ] 服务端筛选时间窗口并补充相关回复上下文。
-- [ ] 模型返回结构化 sourceMessageId、relatedMessageIds、matchType、reason、status、missingDetails。
-- [ ] 将聊天内容当作数据，不执行其中的指令。
-- [ ] 校验结构与来源 ID；人工评估证据是否真正支持匹配。
-- [ ] 请求失败不伪装成无结果；模拟模式与真实模式清晰区分。
-- [ ] 草稿处理说明、关闭自动匹配、请求限额与密钥保护。
+Acceptance: Users can distinguish a private AI draft, a reviewed group card, and an unanswered question. Sources older than three days remain usable when contextually appropriate.
 
-验收：对保留的测试问题评估误匹配、漏匹配、改期、取消与无结果，记录限制。不将结构正确等同于判断正确。
+## 7. Feedback and Knowledge Updates
 
-## 7. 用户测试与下一阶段
+- [ ] Add personal saves, helpful feedback, and correction reports with version references.
+- [ ] Prevent duplicate helpful votes from one user on one version; votes do not imply factual verification.
+- [ ] Add a demo control that inserts a correction or changed condition.
+- [ ] Mark affected cards “Needs review,” show why, and remove them from default answer suggestions.
+- [ ] Allow simulated reviewers to publish a new version with changed sources and preserved version history.
+- [ ] Support archiving and flag unavailable source evidence.
 
-- [ ] 邀请少量测试者，观察输入、比较、联系、返回四个环节。
-- [ ] 对比主动查找与自动轻提示，不提前指导入口位置。
-- [ ] 根据观察修复主要问题，再决定是否接真实群。
+Acceptance: A new correction is visible, disagreement is not silently erased, and regeneration alone does not advance the last-review date.
 
-真实多人版本另需身份认证、参与者访问控制、数据库、实时通信和关闭联系/屏蔽能力。真实群消息接入需验证平台权限与成员可见范围，不假设机器人能读取加入前历史或修改原平台输入框。
+## 8. Persistence and Complete Mock Demo
 
-## 给编码助手的第一条任务
+- [ ] Persist drafts, task conversations, knowledge candidates/cards/versions, saves, and feedback in localStorage.
+- [ ] Handle missing or corrupt stored data; reset only this app’s data.
+- [ ] Clearly label synthetic content, mock matching, simulated review, and simulated replies.
+- [ ] Verify both full flows after refresh.
 
-> 阅读 README.md 和本清单，只实现步骤 1–2。先检查已有项目结构，保留现有内容。使用模拟匹配，不连接真实群或模型。完成后运行构建，验证中文输入、提示关闭、草稿修改和无结果状态，并说明如何本地启动。
+Acceptance: Both card types work end to end in a single browser. Local persistence is not presented as actual multi-user synchronization.
+
+## 9. Connect Real AI
+
+Begin after the mock interaction flows work. Model credentials are required only here.
+
+- [ ] Add server-side intent routing and task matching with structured TaskMatch output.
+- [ ] Add knowledge eligibility assessment and claim-grounded draft synthesis; generation never auto-publishes.
+- [ ] Add knowledge retrieval over available authorized history and applicable published cards.
+- [ ] Use bounded context initially; supply surrounding replies, not disconnected message fragments.
+- [ ] Validate schemas, existing source IDs, and group scope. Treat messages as data, not instructions.
+- [ ] Keep keys server-side; explain draft processing, add an automatic-matching toggle, and limit requests.
+- [ ] Distinguish API failure from no evidence; label mock/live modes explicitly.
+
+Acceptance: Unseen query wording changes results appropriately. Claims remain attributable, unsupported questions return gaps, and structural validity is not treated as proof of factual accuracy.
+
+## 10. Evaluation and User Testing
+
+| Area | Cases to check |
+| --- | --- |
+| Routing | Task, knowledge, mixed intent, casual conversation |
+| Task matching | False matches, missed matches, dates, cancellations, complementary needs |
+| Knowledge eligibility | One good answer, repeated unanswered questions, vague popular replies |
+| Grounding | Every claim supported by its linked messages; no invented consensus |
+| Freshness | Old advice, updated conditions, separate review and generation dates |
+| Recovery | No answer, partial answer, request failure, unavailable sources |
+| Boundaries | No private-chat leakage; no cross-group retrieval; no automatic sending/publication |
+
+- [ ] Evaluate held-out fixtures and document failures and limitations.
+- [ ] Invite a few students to find a companion and answer a recurring practical question.
+- [ ] Compare manual search and automatic prompts without guiding users to the entry point.
+- [ ] Observe task completion, source inspection, interruption, and misunderstanding of draft/review status.
+- [ ] Improve the largest problems before polishing or integrating a live platform.
+
+## 11. Optional Live Integration and Hosting
+
+- [ ] Verify platform access to ordinary messages, authors, replies, and historical data before promising integration.
+- [ ] Add authentication, identity mapping, participant/group access controls, database storage, and real-time messaging.
+- [ ] Implement real reviewer permissions and contact/block controls before multi-user release.
+- [ ] Restrict knowledge to authorized group sources; never silently publish temporary private conversations.
+- [ ] Deploy the app only after implementation and build verification, with demo limitations visible.
+
+Publishing these Markdown files to GitHub does not deploy a functioning website. Native QQ/WeChat composer customization is not assumed.
+
+## First Coding Task
+
+> Read README.md and build-plan.md. Implement steps 1–2 only, while preparing fixtures for both card types. Inspect and preserve existing work. Use simulated behavior, with no model or live group connection. Run the build and verify intent routing, Chinese IME handling, dismissal, stale-result prevention, and no-results feedback. Report how to run the project and what remains unimplemented.
