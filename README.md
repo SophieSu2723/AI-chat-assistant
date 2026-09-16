@@ -184,3 +184,23 @@ Follow the [step-by-step build plan](build-plan.md). The first milestone is a co
 - Do knowledge cards reduce repeated searching without discouraging legitimate follow-up questions?
 
 Use small task-based studies to record discovery, completion, misunderstandings, and perceived interruption. Do not claim efficiency or conversion improvements before measuring them.
+
+## Local demo (current implementation)
+
+The initial simulated UI implements build-plan steps 1–2. It includes deterministic fictional fixtures, a fixed demo clock, group composer, intent routing, delayed private prompts, Chinese IME handling, manual no-results feedback, draft persistence, dismissal, and reset.
+
+```bash
+npm install
+npm run dev
+```
+
+Use `npm run build` for a production build. Task-card details, source inspection, temporary chats, and the knowledge-card review lifecycle are intentionally still pending later milestones.
+
+## Install on a phone
+
+This demo is configured as a Progressive Web App (PWA). Deploy the production build to an HTTPS host (for example, Vercel or Netlify), then open its URL on the phone:
+
+- **iPhone / iPad:** open it in Safari, tap **Share**, then choose **Add to Home Screen**.
+- **Android:** open it in Chrome and select **Install app** (or **Add to Home screen**) from the browser menu.
+
+The installed app opens without browser controls and keeps its data on that device. It is a single-browser demo: conversations and drafts are stored locally, and clearing browser/app data resets them.
