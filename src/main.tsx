@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
 import './styles.css'
+import './import.css'
 import { App } from './App'
 
 // Check for a new version whenever the app is reopened.  The update is applied
