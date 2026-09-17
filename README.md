@@ -212,10 +212,10 @@ Use `npm run build` for a production build.
 ```bash
 node eval/run-eval.mjs --baseline   # original keyword rules, kept for comparison
 node eval/run-eval.mjs --rules      # current src/matching.ts (Node 22.18+)
-GEMINI_API_KEY=... node eval/run-eval.mjs --llm --provider gemini   # optional model run (free tier)
+ANTHROPIC_API_KEY=... node eval/run-eval.mjs --llm   # optional model run
 ```
 
-Model runs support Gemini (free tier), a local Ollama model, and the Claude API; see `eval/README.md`. The script reports draft routing accuracy, the false-trigger rate, message-level field accuracy, final event states, and the set of actionable requests. On the current dataset the original rules score 10/27 on routing and trigger on all 11 casual drafts, while `src/matching.ts` passes all cases. The current rules were written with this dataset in view, so these results show the fixed failure cases rather than general accuracy; new, unseen cases are needed to measure that.
+The script reports draft routing accuracy, the false-trigger rate, message-level field accuracy, final event states, and the set of actionable requests. On the current dataset the original rules score 10/27 on routing and trigger on all 11 casual drafts, while `src/matching.ts` passes all cases. The current rules were written with this dataset in view, so these results show the fixed failure cases rather than general accuracy; new, unseen cases are needed to measure that.
 
 ## Install on a phone
 
