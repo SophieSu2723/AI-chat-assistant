@@ -4,7 +4,6 @@
 //   大模型模式（--provider 默认 anthropic）：
 //   ANTHROPIC_API_KEY=... node run-eval.mjs --llm
 //   GEMINI_API_KEY=...    node run-eval.mjs --llm --provider gemini [--model gemini-2.5-flash]
-//   GITHUB_TOKEN=...      node run-eval.mjs --llm --provider github [--model openai/gpt-4o-mini]
 //                         node run-eval.mjs --llm --provider ollama [--model qwen3:8b]
 //   可选 --rpm <每分钟请求数> 覆盖默认限速；--out <名称> 指定结果文件名
 // 结果写入 results/<mode>.json，并在终端输出摘要。
@@ -16,12 +15,12 @@ const opt = (name, fallback) => args.includes(name) ? args[args.indexOf(name) + 
 const PROVIDERS = {
   anthropic: { keyEnv: 'ANTHROPIC_API_KEY', model: 'claude-haiku-4-5-20251001', rpm: 0 },
   gemini: { keyEnv: 'GEMINI_API_KEY', model: 'gemini-2.5-flash', rpm: 8, baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai' },
-  github: { keyEnv: 'GITHUB_TOKEN', model: 'openai/gpt-4o-mini', rpm: 12, baseUrl: 'https://models.github.ai/inference' },
   ollama: { keyEnv: null, model: 'qwen3:8b', rpm: 0, baseUrl: opt('--base-url', 'http://localhost:11434/v1') }
 }
 const providerName = opt('--provider', 'anthropic')
 const provider = PROVIDERS[providerName]
 if (mode === 'llm') {
+  if (providerName === 'github') { console.error('GitHub Models 已于 2026-07-30 停止服务，请改用 --provider gemini 或 --provider ollama'); process.exit(1) }
   if (!provider) { console.error(`未知的 provider：${providerName}，可选 ${Object.keys(PROVIDERS).join(' / ')}`); process.exit(1) }
   if (provider.keyEnv && !process.env[provider.keyEnv]) { console.error(`缺少 ${provider.keyEnv}，大模型模式无法运行`); process.exit(1) }
 }
@@ -104,7 +103,7 @@ async function callTool(system, user, tool) {
     if (!block) throw new Error('模型未返回工具调用')
     return block.input
   }
-  // OpenAI 兼容接口：Gemini、GitHub Models、Ollama
+  // OpenAI 兼容接口：Gemini、Ollama
   const headers = provider.keyEnv ? { authorization: `Bearer ${process.env[provider.keyEnv]}` } : {}
   const schemaHint = `\n\n必须调用 ${tool.name} 函数输出结果；如果无法调用函数，只输出一个符合以下 JSON schema 的对象，不要输出其他文字：\n${JSON.stringify(tool.input_schema)}`
   const body = await request(`${provider.baseUrl}/chat/completions`, headers, {

@@ -16,13 +16,13 @@
 | provider | 费用 | 环境变量 | 默认模型 | 默认限速 |
 | --- | --- | --- | --- | --- |
 | gemini | 免费额度，无需绑卡 | GEMINI_API_KEY（Google AI Studio 获取） | gemini-2.5-flash | 8 次/分钟 |
-| github | 免费额度，用 GitHub 账号 | GITHUB_TOKEN（fine-grained token，勾选 Models: Read） | openai/gpt-4o-mini | 12 次/分钟 |
 | ollama | 本地运行，完全免费 | 无 | qwen3:8b | 不限 |
 | anthropic | 按用量付费 | ANTHROPIC_API_KEY | claude-haiku-4-5-20251001 | 不限 |
 
     GEMINI_API_KEY=... node eval/run-eval.mjs --llm --provider gemini
-    GITHUB_TOKEN=...   node eval/run-eval.mjs --llm --provider github
                        node eval/run-eval.mjs --llm --provider ollama
+
+GitHub Models 已于 2026 年 7 月 30 日停止服务，不再支持。
 
 可选参数：`--model <模型名>` 更换模型；`--rpm <数字>` 调整每分钟请求数，遇到限速时调低；`--out <名称>` 指定结果文件名。结果写入 results/，默认文件名为 `llm-<provider>.json`。
 
