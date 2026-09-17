@@ -1,11 +1,12 @@
 // 用法：
-//   node run-eval.mjs --baseline          现有关键词规则（从 src/App.tsx 复制）
+//   node run-eval.mjs --baseline          最初的关键词规则（修复前的 App.tsx，保留作对照）
+//   node run-eval.mjs --rules             当前规则版 src/matching.ts（需要 Node 22.18 及以上，可直接运行 .ts）
 //   ANTHROPIC_API_KEY=... node run-eval.mjs --llm [--model claude-haiku-4-5-20251001]
 // 结果写入 results/<mode>.json，并在终端输出摘要。
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 
 const args = process.argv.slice(2)
-const mode = args.includes('--llm') ? 'llm' : 'baseline'
+const mode = args.includes('--llm') ? 'llm' : args.includes('--rules') ? 'rules' : 'baseline'
 if (mode === 'llm' && !process.env.ANTHROPIC_API_KEY) { console.error('缺少 ANTHROPIC_API_KEY，大模型模式无法运行'); process.exit(1) }
 const model = args.includes('--model') ? args[args.indexOf('--model') + 1] : 'claude-haiku-4-5-20251001'
 const data = JSON.parse(readFileSync(new URL('./dataset.json', import.meta.url)))
@@ -17,7 +18,7 @@ const byId = Object.fromEntries(data.messages.map(m => [m.id, m]))
 const NOW = +new Date(data.now)
 const WINDOW = 72 * 60 * 60 * 1000
 
-// ---------- 基线：与 src/App.tsx 当前实现一致 ----------
+// ---------- 基线：修复前 src/App.tsx 的实现 ----------
 function routeIntent(value) {
   const text = value.toLowerCase().trim()
   if (!text) return 'none'
@@ -123,8 +124,20 @@ function messageMetrics(rows) {
 }
 
 // ---------- 运行 ----------
-const draftPreds = mode === 'llm' ? await mapLimit(data.drafts, 4, llmDraft) : data.drafts.map(baselineDraft)
-const msgPredList = mode === 'llm' ? await mapLimit(data.messages, 4, llmMessage) : data.messages.map(baselineMessage)
+let draftPreds, msgPredList
+if (mode === 'llm') {
+  draftPreds = await mapLimit(data.drafts, 4, llmDraft)
+  msgPredList = await mapLimit(data.messages, 4, llmMessage)
+} else if (mode === 'rules') {
+  const rules = await import('../src/matching.ts')
+  const history = data.messages.map(m => ({ id: m.id, groupId: 'eval', senderId: m.sender, text: m.text, sentAt: m.sentAt, replyToId: m.replyToId }))
+  const classes = rules.classifyMessages(history)
+  draftPreds = data.drafts.map(d => ({ route: rules.routeIntent(d.text) }))
+  msgPredList = data.messages.map(m => classes[m.id])
+} else {
+  draftPreds = data.drafts.map(baselineDraft)
+  msgPredList = data.messages.map(baselineMessage)
+}
 const msgPreds = Object.fromEntries(data.messages.map((m, i) => [m.id, msgPredList[i]]))
 
 const draftRows = data.drafts.map((d, i) => ({ id: d.id, text: d.text, gold: d.route, pred: draftPreds[i], note: d.note }))

@@ -1,34 +1,34 @@
 # Step-by-Step Build Plan
 
-Read [README.md](README.md) first. Both Immediate Task Cards and Knowledge Cards are required for the MVP. Build in small increments; after each step, report changes, checks, and remaining limitations. All checkboxes below are planned work, not completed features.
+Read [README.md](README.md) first. Both Immediate Task Cards and Knowledge Cards are required for the MVP. Build in small increments; after each step, report changes, checks, and remaining limitations. Checked items are implemented in the current demo; unchecked items are planned. Notes in parentheses describe partial work. Status last synced on 2026-09-17.
 
 ## 1. Project Setup and Shared Fixtures
 
-- [ ] Initialize React + TypeScript; document install, run, and build commands.
-- [ ] Create approximately 70–100 fictional bilingual group messages with IDs, authors, timestamps, group IDs, and reply links.
-- [ ] Fix and display a demo clock and time zone.
-- [ ] Include task requests, offers, different dates, cancellations, full-capacity updates, expired requests, and irrelevant conversation.
-- [ ] Include repeated questions with substantive answers; a single excellent answer; repeated unanswered questions; vague popular comments; conflicting experiences; outdated advice; and a later correction.
-- [ ] Include knowledge sources older than 72 hours to verify that task expiry rules do not remove reusable knowledge.
-- [ ] Write expected outcomes and source IDs for both card types, reserving some cases for later evaluation.
+- [x] Initialize React + TypeScript; document install, run, and build commands.
+- [x] Create approximately 70–100 fictional bilingual group messages with IDs, authors, timestamps, group IDs, and reply links.
+- [ ] Fix and display a demo clock and time zone. *(Partial: the clock is fixed at 2026-09-17 18:30 UTC+8 but is not shown in the UI.)*
+- [ ] Include task requests, offers, different dates, cancellations, full-capacity updates, expired requests, and irrelevant conversation. *(Partial: requests, offers, full-capacity updates, and irrelevant conversation exist; no cancellation or clearly expired task request yet.)*
+- [ ] Include repeated questions with substantive answers; a single excellent answer; repeated unanswered questions; vague popular comments; conflicting experiences; outdated advice; and a later correction. *(Partial: conflicting experiences are still missing.)*
+- [x] Include knowledge sources older than 72 hours to verify that task expiry rules do not remove reusable knowledge.
+- [ ] Write expected outcomes and source IDs for both card types, reserving some cases for later evaluation. *(Partial: `eval/dataset.json` labels 27 drafts, 24 messages, and 4 final event states; no held-out split yet.)*
 
 Acceptance: Every fixture has an explainable expected result. Demo examples remain repeatable as real time advances.
 
 ## 2. Shared Chat Interface and Intent Routing
 
-- [ ] Build group feed, composer, message sending, and manual search.
-- [ ] Simulate routing to coordination, knowledge, mixed/unclear, or no action.
-- [ ] Wait approximately 800ms after typing stops; support Chinese IME composition.
-- [ ] Show one private compact prompt; open labeled sections for mixed results instead of stacking prompts.
-- [ ] Preserve drafts, respect dismissal, invalidate stale results, and keep the composer stable.
-- [ ] Add loading, manual no-results, and retry states. Automatic no-results stays quiet.
+- [x] Build group feed, composer, message sending, and manual search.
+- [x] Simulate routing to coordination, knowledge, mixed/unclear, or no action.
+- [x] Wait approximately 800ms after typing stops; support Chinese IME composition.
+- [ ] Show one private compact prompt; open labeled sections for mixed results instead of stacking prompts. *(Partial: one prompt is shown; mixed intent shows task results, falling back to knowledge when no task matches, without labeled sections.)*
+- [x] Preserve drafts, respect dismissal, invalidate stale results, and keep the composer stable.
+- [ ] Add loading, manual no-results, and retry states. Automatic no-results stays quiet. *(Partial: loading, manual no-results, and quiet automatic no-results exist; no retry state.)*
 
 Acceptance: “Anyone going shopping?” routes to tasks; “How do I get there without a car?” routes to knowledge; a past shopping anecdote triggers neither. Sending is never blocked.
 
 ## 3. Immediate Task Cards and Source Viewer
 
-- [ ] Render compact results in a bottom sheet with author, original excerpt, date, location, and availability uncertainty.
-- [ ] Enforce the 72-hour request window plus event relevance; include corrections and cancellations.
+- [ ] Render compact results in a bottom sheet with author, original excerpt, date, location, and availability uncertainty. *(Partial: the sheet shows author, message, time, related messages, and an availability-uncertain badge; location is not extracted.)*
+- [x] Enforce the 72-hour request window plus event relevance; include corrections and cancellations.
 - [ ] Build a reusable source viewer that opens and highlights specific messages and surrounding replies.
 - [ ] Preserve focus and drafts, support keyboard navigation, and check mobile keyboard behavior.
 
@@ -36,22 +36,22 @@ Acceptance: Results do not invent availability; canceled/full requests are not s
 
 ## 4. Temporary Conversations
 
-- [ ] “Chat about this” opens an editable draft with the original request attached.
-- [ ] Create a conversation only when the first message is sent.
-- [ ] Deduplicate by request ID and participant pair.
+- [ ] “Chat about this” opens an editable draft with the original request attached. *(Partial: the opening message quotes the request and is editable; the request is not pinned above the conversation.)*
+- [x] Create a conversation only when the first message is sent.
+- [ ] Deduplicate by request ID and participant pair. *(Partial: the demo keeps one shared conversation for all requests.)*
 - [ ] Add explicitly simulated replies and an “Ongoing chats” list.
-- [ ] Keep these messages outside the main group and out of knowledge-generation sources.
+- [x] Keep these messages outside the main group and out of knowledge-generation sources.
 
 Acceptance: Opening does not notify or send. Users can return to the same conversation without duplicates.
 
 ## 5. Knowledge Eligibility and Draft Creation
 
-- [ ] Implement mock eligibility decisions for reusable, substantive, source-backed content.
+- [ ] Implement mock eligibility decisions for reusable, substantive, source-backed content. *(Partial: knowledge matching uses only substantive answers, not questions, acknowledgements, or task messages; no eligibility decision is recorded.)*
 - [ ] Record reasons and source message IDs. Repetition affects priority, never eligibility by itself.
 - [ ] Count distinct question episodes; avoid counting copied replies as independent evidence.
-- [ ] Add private AI-discovered candidates and a member-initiated “Save as knowledge” action.
+- [ ] Add private AI-discovered candidates and a member-initiated “Save as knowledge” action. *(Partial: the result sheet can save a local knowledge draft; there are no AI-discovered candidates.)*
 - [ ] Reuse an existing candidate for the same question and compatible context; preserve genuinely different conditions.
-- [ ] Return an explicit insufficient-answer outcome for unanswered or vague discussions.
+- [ ] Return an explicit insufficient-answer outcome for unanswered or vague discussions. *(Partial: automatic prompts stay quiet when a question has no answers; there is no explicit insufficient-answer message.)*
 
 Acceptance: One detailed answer can qualify; ten unanswered repetitions or a highly liked vague opinion cannot. Manual creation cannot bypass the evidence requirement.
 
@@ -81,7 +81,7 @@ Acceptance: A new correction is visible, disagreement is not silently erased, an
 ## 8. Persistence and Complete Mock Demo
 
 - [ ] Persist drafts, task conversations, knowledge candidates/cards/versions, saves, and feedback in localStorage.
-- [ ] Handle missing or corrupt stored data; reset only this app’s data.
+- [x] Handle missing or corrupt stored data; reset only this app’s data.
 - [ ] Clearly label synthetic content, mock matching, simulated review, and simulated replies.
 - [ ] Verify both full flows after refresh.
 
@@ -113,7 +113,7 @@ Acceptance: Unseen query wording changes results appropriately. Claims remain at
 | Recovery | No answer, partial answer, request failure, unavailable sources |
 | Boundaries | No private-chat leakage; no cross-group retrieval; no automatic sending/publication |
 
-- [ ] Evaluate held-out fixtures and document failures and limitations.
+- [ ] Evaluate held-out fixtures and document failures and limitations. *(Partial: `eval/` compares the original keyword rules, the current rules, and an optional model run on a labeled set that is not yet held out.)*
 - [ ] Invite a few students to find a companion and answer a recurring practical question.
 - [ ] Compare manual search and automatic prompts without guiding users to the entry point.
 - [ ] Observe task completion, source inspection, interruption, and misunderstanding of draft/review status.

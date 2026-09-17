@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DEMO_NOW, GROUP, authorFor, messages, type Message } from './fixtures'
+import { findMatch, routeIntent, type Match } from './matching'
 
-type Route = 'task' | 'knowledge' | 'mixed' | 'none'
-type Match = { route: Exclude<Route, 'none'>; label: string; query: string; source: Message; related: Message[] }
 type ConversationMessage = { id: string; sender: 'me' | 'ravi'; text: string; sentAt: string }
 type KnowledgeCard = { id: string; question: string; answer: string; sourceIds: string[]; createdAt: string; status: 'draft' }
 const DRAFT_KEY = 'campus-circle:draft'
@@ -36,36 +35,7 @@ function parseWechatText(value: string): ImportedMessage[] {
   return parsed
 }
 
-function routeIntent(value: string): Route {
-  const text = value.toLowerCase().trim()
-  if (!text) return 'none'
-  const task = /anyone|who can|looking for|need (a |an )?(ride|partner|help)|carpool|一起|有人|搭车|拼车|求助|组队|找人|需要帮/.test(text)
-  const knowledge = /how|where|what|why|when|can i|怎么|如何|哪里|多少钱|流程|为什么|吗|？/.test(text)
-  return task && knowledge ? 'mixed' : task ? 'task' : knowledge ? 'knowledge' : 'mixed'
-}
 function displayName(message: Message) { const imported = message as ImportedMessage; return imported.senderName || authorFor(message.senderId).name }
-function isTaskMessage(text: string) { return /anyone|looking for|need (a |an )?(ride|partner|help)|can someone|一起|有人|搭车|拼车|求助|组队|找人|需要帮|谁能/.test(text.toLowerCase()) }
-function isClosed(text: string) { return /full|cancelled|canceled|completed|已满|满了|取消|结束|不用了/.test(text.toLowerCase()) }
-function queryTerms(value: string) {
-  const normalized = value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ')
-  const words = normalized.split(/\s+/).filter(word => word.length > 1 && !new Set(['anyone', 'going', 'where', 'what', 'how', 'with', 'about', '可以', '有人', '一起', '怎么', '如何', '哪里']).has(word))
-  const chinese = [...normalized.replace(/[a-z0-9\s]/g, '')]
-  for (let index = 0; index < chinese.length - 1; index += 1) words.push(chinese.slice(index, index + 2).join(''))
-  return [...new Set(words)]
-}
-function relevance(value: string, message: Message) { const text = message.text.toLowerCase(); return queryTerms(value).reduce((score, term) => score + (text.includes(term) ? term.length : 0), 0) }
-function findMatch(route: Route, value: string, candidates: Message[]): Match | null {
-  const now = +new Date(DEMO_NOW)
-  const ranked = candidates.map(message => ({ message, score: relevance(value, message) })).filter(item => item.score > 0)
-  const recentTask = ranked.filter(({ message }) => isTaskMessage(message.text) && !isClosed(message.text) && now - +new Date(message.sentAt) <= 72 * 60 * 60 * 1000)
-  const knowledge = ranked.filter(({ message }) => !isTaskMessage(message.text))
-  const pool = route === 'knowledge' ? knowledge : route === 'task' ? recentTask : recentTask.length ? recentTask : knowledge
-  const best = pool.sort((a, b) => b.score - a.score || +new Date(b.message.sentAt) - +new Date(a.message.sentAt))[0]
-  if (!best) return null
-  const kind: Exclude<Route, 'none'> = isTaskMessage(best.message.text) ? 'task' : 'knowledge'
-  const related = ranked.filter(item => item.message.id !== best.message.id && item.score > 0).sort((a, b) => b.score - a.score).slice(0, 2).map(item => item.message)
-  return { route: kind, label: kind === 'task' ? `发现 1 条可联系的近期需求` : '群内找到相关讨论', query: value.trim(), source: best.message, related }
-}
 function dateLabel(iso: string) { return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai' }).format(new Date(iso)) }
 function loadChat(): ConversationMessage[] { try { return JSON.parse(localStorage.getItem(CHAT_KEY) ?? '[]') } catch { return [] } }
 
@@ -83,12 +53,14 @@ export function App() {
   const [importOpen, setImportOpen] = useState(false)
   const revision = useRef(0)
   const dismissed = useRef(localStorage.getItem(DISMISS_KEY) ?? '')
+  // 匹配使用完整群历史：任务卡在 matching.ts 中按 72 小时过滤，知识卡不受时间窗口限制
+  const history = useMemo(() => [...messages, ...imported, ...sent], [imported, sent])
   const feed = useMemo(() => [...messages.filter(x => new Date(x.sentAt) >= new Date('2026-09-14T18:30:00+08:00')), ...imported, ...sent].sort((a, b) => +new Date(a.sentAt) - +new Date(b.sentAt)), [imported, sent])
   useEffect(() => { localStorage.setItem(DRAFT_KEY, draft) }, [draft])
   useEffect(() => { localStorage.setItem(IMPORT_KEY, JSON.stringify(imported)) }, [imported])
   useEffect(() => { localStorage.setItem(KNOWLEDGE_KEY, JSON.stringify(knowledgeCards)) }, [knowledgeCards])
-  useEffect(() => { const current = ++revision.current; setSuggestion(null); setSearchState('idle'); if (composing || !draft.trim() || dismissed.current === draft) return; const timer = window.setTimeout(() => { if (current === revision.current) { const result = findMatch(routeIntent(draft), draft, feed); if (result) setSuggestion(result) } }, 800); return () => window.clearTimeout(timer) }, [draft, composing, feed])
-  const manualSearch = () => { const current = ++revision.current; setSuggestion(null); setSearchState('loading'); window.setTimeout(() => { if (current !== revision.current) return; const result = findMatch(routeIntent(draft), draft, feed); if (result) { setSuggestion(result); setSheet(true); setSearchState('idle') } else setSearchState('empty') }, 350) }
+  useEffect(() => { const current = ++revision.current; setSuggestion(null); setSearchState('idle'); if (composing || !draft.trim() || dismissed.current === draft) return; const timer = window.setTimeout(() => { if (current === revision.current) { const result = findMatch(routeIntent(draft), draft, history, DEMO_NOW); if (result) setSuggestion(result) } }, 800); return () => window.clearTimeout(timer) }, [draft, composing, history])
+  const manualSearch = () => { const current = ++revision.current; setSuggestion(null); setSearchState('loading'); window.setTimeout(() => { if (current !== revision.current) return; const result = findMatch(routeIntent(draft), draft, history, DEMO_NOW); if (result) { setSuggestion(result); setSheet(true); setSearchState('idle') } else setSearchState('empty') }, 350) }
   const send = () => { if (!draft.trim()) return; setSent(s => [...s, { id: `local-${Date.now()}`, groupId: GROUP.id, senderId: 'me', text: draft.trim(), sentAt: DEMO_NOW }]); setDraft(''); setSuggestion(null) }
   const saveKnowledge = (result: Match) => { const sourceIds = [result.source, ...result.related].map(message => message.id); setKnowledgeCards(cards => cards.some(card => card.question === result.query && card.sourceIds[0] === result.source.id) ? cards : [{ id: `knowledge-${Date.now()}`, question: result.query, answer: result.source.text, sourceIds, createdAt: new Date().toISOString(), status: 'draft' }, ...cards]) }
   const reset = () => { [DRAFT_KEY, DISMISS_KEY, CHAT_KEY, IMPORT_KEY, KNOWLEDGE_KEY].forEach(key => localStorage.removeItem(key)); dismissed.current = ''; setDraft(''); setSuggestion(null); setSent([]); setImported([]); setKnowledgeCards([]); setSearchState('idle') }

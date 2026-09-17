@@ -8,7 +8,8 @@
 
 运行：
 
-    node run-eval.mjs --baseline
+    node run-eval.mjs --baseline   # 修复前的关键词规则，保留作对照
+    node run-eval.mjs --rules      # 当前 src/matching.ts，需要 Node 22.18 及以上
     ANTHROPIC_API_KEY=... node run-eval.mjs --llm
     ANTHROPIC_API_KEY=... node run-eval.mjs --llm --model <model-id>
 

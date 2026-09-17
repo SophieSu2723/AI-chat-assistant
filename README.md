@@ -4,7 +4,7 @@ Discover timely needs, start focused conversations, and preserve reusable answer
 
 When someone is looking for a ride or a grocery-shopping companion, the assistant surfaces relevant messages from the past three days. Users can then chat directly about that specific request without adding each other as friends or filling the main group feed with coordination details.
 
-> Status: Product definition; the application has not been implemented. The first version will use fictional data and simulated matching, followed by a real AI integration. The behaviors described here are development requirements, not existing features.
+> Status: Working single-browser demo with fictional data and rule-based (simulated) matching. Build-plan steps 1–2 are largely complete and parts of steps 3–5 are in place; see [build-plan.md](build-plan.md) for item-level status. No AI model is connected yet. The behaviors described below are the full product requirements, and not all of them are implemented.
 
 The product has two complementary card types: **Immediate Task Cards** help members find people to coordinate with; **Knowledge Cards** preserve source-backed answers for future questions.
 
@@ -187,14 +187,35 @@ Use small task-based studies to record discovery, completion, misunderstandings,
 
 ## Local demo (current implementation)
 
-The initial simulated UI implements build-plan steps 1–2. It includes deterministic fictional fixtures, a fixed demo clock, group composer, intent routing, delayed private prompts, Chinese IME handling, manual no-results feedback, draft persistence, dismissal, and reset.
+The demo runs entirely in one browser with fictional data and rule-based matching. It currently includes:
+
+- **Group chat:** 82 fictional bilingual messages, a fixed demo clock (2026-09-17 18:30, UTC+8), a composer, sending, and pasted WeChat text import.
+- **Intent routing:** `src/matching.ts` routes drafts to task, knowledge, mixed, or no action. Casual talk, past experiences, confirmations, and status updates stay quiet; "does anyone know…" questions route to knowledge.
+- **Private prompts:** a single-line prompt after about 800 ms of inactivity, Chinese IME handling, stale-result prevention, dismissal, draft persistence, manual search with loading and no-results feedback, and reset.
+- **Task matching:** follow-ups are tracked through reply chains, so requests that are full, cancelled, or already arranged are not suggested. Only open requests from the preceding 72 hours are actionable.
+- **Knowledge matching:** only substantive answers are used as sources, with no 72-hour cutoff. The result includes the original question, other answers, and later corrections from the same thread.
+- **Result sheet:** shows the source message and related messages, opens a demo one-to-one chat for task results, and saves a local knowledge draft.
+
+Not yet implemented: the source viewer, per-request conversation deduplication and the ongoing-chat list, labeled sections for mixed intent, knowledge eligibility records, review and publication, the group knowledge area, and feedback and version history.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Use `npm run build` for a production build. Task-card details, source inspection, temporary chats, and the knowledge-card review lifecycle are intentionally still pending later milestones.
+Use `npm run build` for a production build.
+
+## Evaluation
+
+`eval/` contains the classification prompts, JSON schemas, a labeled dataset, and a dependency-free script:
+
+```bash
+node eval/run-eval.mjs --baseline   # original keyword rules, kept for comparison
+node eval/run-eval.mjs --rules      # current src/matching.ts (Node 22.18+)
+ANTHROPIC_API_KEY=... node eval/run-eval.mjs --llm   # optional model run
+```
+
+The script reports draft routing accuracy, the false-trigger rate, message-level field accuracy, final event states, and the set of actionable requests. On the current dataset the original rules score 10/27 on routing and trigger on all 11 casual drafts, while `src/matching.ts` passes all cases. The current rules were written with this dataset in view, so these results show the fixed failure cases rather than general accuracy; new, unseen cases are needed to measure that.
 
 ## Install on a phone
 
