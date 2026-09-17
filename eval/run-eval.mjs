@@ -1,14 +1,34 @@
 // 用法：
 //   node run-eval.mjs --baseline          最初的关键词规则（修复前的 App.tsx，保留作对照）
 //   node run-eval.mjs --rules             当前规则版 src/matching.ts（需要 Node 22.18 及以上，可直接运行 .ts）
-//   ANTHROPIC_API_KEY=... node run-eval.mjs --llm [--model claude-haiku-4-5-20251001]
+//   大模型模式（--provider 默认 anthropic）：
+//   ANTHROPIC_API_KEY=... node run-eval.mjs --llm
+//   GEMINI_API_KEY=...    node run-eval.mjs --llm --provider gemini [--model gemini-2.5-flash]
+//                         node run-eval.mjs --llm --provider ollama [--model qwen3:8b]
+//   可选 --rpm <每分钟请求数> 覆盖默认限速；--out <名称> 指定结果文件名
+//   --ping 只发 1 次请求并打印原始返回，用于排查；--limit <N> 只评估前 N 条草稿和前 N 条消息
 // 结果写入 results/<mode>.json，并在终端输出摘要。
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 
 const args = process.argv.slice(2)
 const mode = args.includes('--llm') ? 'llm' : args.includes('--rules') ? 'rules' : 'baseline'
-if (mode === 'llm' && !process.env.ANTHROPIC_API_KEY) { console.error('缺少 ANTHROPIC_API_KEY，大模型模式无法运行'); process.exit(1) }
-const model = args.includes('--model') ? args[args.indexOf('--model') + 1] : 'claude-haiku-4-5-20251001'
+const opt = (name, fallback) => args.includes(name) ? args[args.indexOf(name) + 1] : fallback
+const PROVIDERS = {
+  anthropic: { keyEnv: 'ANTHROPIC_API_KEY', model: 'claude-haiku-4-5-20251001', rpm: 0 },
+  gemini: { keyEnv: 'GEMINI_API_KEY', model: 'gemini-2.5-flash', rpm: 8, baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai' },
+  ollama: { keyEnv: null, model: 'qwen3:8b', rpm: 0, baseUrl: opt('--base-url', 'http://localhost:11434/v1') }
+}
+const providerName = opt('--provider', 'anthropic')
+const provider = PROVIDERS[providerName]
+if (mode === 'llm') {
+  if (providerName === 'github') { console.error('GitHub Models 已于 2026-07-30 停止服务，请改用 --provider gemini 或 --provider ollama'); process.exit(1) }
+  if (!provider) { console.error(`未知的 provider：${providerName}，可选 ${Object.keys(PROVIDERS).join(' / ')}`); process.exit(1) }
+  if (provider.keyEnv && !process.env[provider.keyEnv]) { console.error(`缺少 ${provider.keyEnv}，大模型模式无法运行`); process.exit(1) }
+}
+const model = opt('--model', provider?.model)
+const rpm = Number(opt('--rpm', provider?.rpm ?? 0))
+const limitN = Number(opt('--limit', 0))
+const outName = opt('--out', mode === 'llm' ? `llm-${providerName}` : mode)
 const data = JSON.parse(readFileSync(new URL('./dataset.json', import.meta.url)))
 const schemas = JSON.parse(readFileSync(new URL('./schemas.json', import.meta.url)))
 const fill = s => s.replaceAll('{{NOW}}', data.now).replaceAll('{{TZ}}', data.tz)
@@ -37,23 +57,87 @@ function baselineMessage(m) {
 }
 
 // ---------- 大模型 ----------
-async function callTool(system, user, tool) {
-  const key = process.env.ANTHROPIC_API_KEY
-  if (!key) throw new Error('缺少 ANTHROPIC_API_KEY')
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+let nextSlot = 0
+async function throttle() {
+  if (!rpm) return
+  const gap = Math.ceil(60000 / rpm)
+  const wait = Math.max(0, nextSlot - Date.now())
+  nextSlot = Math.max(nextSlot, Date.now()) + gap
+  if (wait) await sleep(wait)
+}
+function parseJsonText(text) {
+  const cleaned = String(text ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').replace(/```json|```/g, '').trim()
+  const start = cleaned.indexOf('{'), end = cleaned.lastIndexOf('}')
+  if (start < 0 || end < start) throw new Error('模型没有返回 JSON')
+  return JSON.parse(cleaned.slice(start, end + 1))
+}
+let fatal = null
+async function request(url, headers, body) {
   for (let attempt = 0; attempt < 4; attempt++) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model, max_tokens: 800, system, tools: [tool], tool_choice: { type: 'tool', name: tool.name }, messages: [{ role: 'user', content: user }] })
-    })
-    if (res.status === 429 || res.status >= 500) { await new Promise(r => setTimeout(r, 2000 * (attempt + 1))); continue }
-    const body = await res.json()
-    if (!res.ok) throw new Error(`${res.status} ${JSON.stringify(body)}`)
-    const block = body.content.find(b => b.type === 'tool_use')
+    if (fatal) throw fatal
+    await throttle()
+    let res
+    try {
+      res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body), signal: AbortSignal.timeout(60000) })
+    } catch (e) {
+      if (attempt === 3) throw new Error(`网络请求失败：${e.name === 'TimeoutError' ? '60 秒无响应' : e.message}`)
+      await sleep(3000); continue
+    }
+    const raw = await res.text()
+    if (process.env.EVAL_DEBUG) console.log(`\n[debug] HTTP ${res.status}\n${raw.slice(0, 1500)}`)
+    if (res.status === 429) {
+      // 每日额度用完时重试没有意义，直接停止全部请求
+      if (/per ?day|PerDay|daily/i.test(raw)) { fatal = new Error(`今日免费额度已用完：${raw.slice(0, 300)}`); throw fatal }
+      const retryAfter = Number(res.headers.get('retry-after'))
+      const wait = retryAfter ? retryAfter * 1000 : 15000 * (attempt + 1)
+      process.stdout.write(`  被限速，${Math.round(wait / 1000)} 秒后重试…\n`)
+      await sleep(wait); continue
+    }
+    if (res.status >= 500) { await sleep(5000 * (attempt + 1)); continue }
+    let json = {}
+    try { json = JSON.parse(raw) } catch {}
+    if (Array.isArray(json)) json = json[0] ?? {}
+    if (!res.ok) {
+      const err = new Error(`${res.status} ${raw.slice(0, 300)}`)
+      if ([400, 401, 403, 404].includes(res.status)) fatal = err   // key、模型名或参数错误，后续请求同样会失败
+      throw err
+    }
+    return json
+  }
+  throw new Error('多次被限速或服务端错误，请用 --rpm 调低速度后重试')
+}
+// 部分 OpenAI 兼容接口（如 Gemini）不接受 type 数组，改写为单一类型加 nullable
+function compatSchema(node) {
+  if (Array.isArray(node)) return node.map(compatSchema)
+  if (!node || typeof node !== 'object') return node
+  const out = {}
+  for (const [k, v] of Object.entries(node)) out[k] = compatSchema(v)
+  if (Array.isArray(node.type)) { out.type = node.type.find(t => t !== 'null') ?? 'string'; if (node.type.includes('null')) out.nullable = true }
+  return out
+}
+async function callTool(system, user, tool) {
+  if (providerName === 'anthropic') {
+    const body = await request('https://api.anthropic.com/v1/messages',
+      { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      { model, max_tokens: 800, system, tools: [tool], tool_choice: { type: 'tool', name: tool.name }, messages: [{ role: 'user', content: user }] })
+    const block = body.content?.find(b => b.type === 'tool_use')
     if (!block) throw new Error('模型未返回工具调用')
     return block.input
   }
-  throw new Error('重试次数用尽')
+  // OpenAI 兼容接口：Gemini、Ollama
+  const headers = provider.keyEnv ? { authorization: `Bearer ${process.env[provider.keyEnv]}` } : {}
+  const schemaHint = `\n\n必须调用 ${tool.name} 函数输出结果；如果无法调用函数，只输出一个符合以下 JSON schema 的对象，不要输出其他文字：\n${JSON.stringify(tool.input_schema)}`
+  const body = await request(`${provider.baseUrl}/chat/completions`, headers, {
+    model, temperature: 0, max_tokens: 1500,
+    messages: [{ role: 'system', content: system + schemaHint }, { role: 'user', content: user }],
+    tools: [{ type: 'function', function: { name: tool.name, description: tool.description, parameters: compatSchema(tool.input_schema) } }],
+    tool_choice: 'required'
+  })
+  const message = body.choices?.[0]?.message
+  const call = message?.tool_calls?.[0]
+  if (call) return typeof call.function.arguments === 'string' ? JSON.parse(call.function.arguments) : call.function.arguments
+  return parseJsonText(message?.content)
 }
 const fmt = m => `[${m.id}] ${m.sender} @ ${m.sentAt}${m.replyToId ? ` (回复 ${m.replyToId})` : ''}: ${m.text}`
 function contextFor(m) {
@@ -72,9 +156,18 @@ function contextFor(m) {
 const llmDraft = d => callTool(draftPrompt, `草稿：${d.text}`, schemas.draft_intent)
 const llmMessage = m => callTool(messagePrompt, contextFor(m), schemas.message_classify)
 
+let done = 0, total = 0
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length); let i = 0
-  await Promise.all(Array.from({ length: limit }, async () => { while (i < items.length) { const k = i++; try { out[k] = await fn(items[k]) } catch (e) { out[k] = { error: String(e.message ?? e) } } } }))
+  await Promise.all(Array.from({ length: limit }, async () => {
+    while (i < items.length && !fatal) {
+      const k = i++
+      const t0 = Date.now()
+      try { out[k] = await fn(items[k]) } catch (e) { out[k] = { error: String(e.message ?? e) } }
+      done++
+      console.log(`[${done}/${total}] ${items[k].id} ${out[k]?.error ? '失败：' + out[k].error.slice(0, 120) : '完成'} (${((Date.now() - t0) / 1000).toFixed(1)}s)`)
+    }
+  }))
   return out
 }
 
@@ -126,8 +219,22 @@ function messageMetrics(rows) {
 // ---------- 运行 ----------
 let draftPreds, msgPredList
 if (mode === 'llm') {
-  draftPreds = await mapLimit(data.drafts, 4, llmDraft)
-  msgPredList = await mapLimit(data.messages, 4, llmMessage)
+  const limit = rpm ? 1 : 4
+  if (args.includes('--ping')) {
+    process.env.EVAL_DEBUG = '1'
+    try { console.log('\n解析结果：', JSON.stringify(await llmDraft(data.drafts[0]))) } catch (e) { console.log('\n失败：', e.message) }
+    process.exit(0)
+  }
+  if (limitN) { data.drafts = data.drafts.slice(0, limitN); data.messages = data.messages.slice(0, limitN) }
+  total = data.drafts.length + data.messages.length
+  console.log(`provider=${providerName} model=${model} rpm=${rpm || '不限'}，共 ${total} 次请求，预计约 ${rpm ? Math.ceil(total / rpm) : 1} 分钟`)
+  draftPreds = await mapLimit(data.drafts, limit, llmDraft)
+  if (!fatal) msgPredList = await mapLimit(data.messages, limit, llmMessage)
+  if (fatal) {
+    console.error(`\n已停止：${fatal.message}`)
+    console.error('常见原因：404 模型名不存在（用 --model 换成平台当前的模型名）；401/403 key 无效；400 参数不被支持；429 今日额度用完（明天再试或换模型）。')
+    process.exit(1)
+  }
 } else if (mode === 'rules') {
   const rules = await import('../src/matching.ts')
   const history = data.messages.map(m => ({ id: m.id, groupId: 'eval', senderId: m.sender, text: m.text, sentAt: m.sentAt, replyToId: m.replyToId }))
@@ -147,7 +254,7 @@ const eventRows = Object.entries(data.event_states.expected).map(([id, gold]) =>
 const expectedActionable = [...data.event_states.actionable_within_72h].sort()
 
 const report = {
-  mode, model: mode === 'llm' ? model : null, now: data.now,
+  mode, provider: mode === 'llm' ? providerName : null, model: mode === 'llm' ? model : null, now: data.now,
   drafts: draftMetrics(draftRows),
   messages: messageMetrics(msgRows),
   events: {
@@ -156,17 +263,19 @@ const report = {
     actionable_pred: events.actionable, actionable_gold: expectedActionable,
     actionable_exact_match: JSON.stringify(events.actionable) === JSON.stringify(expectedActionable)
   },
+  request_errors: [...draftRows, ...msgRows].filter(r => r.pred?.error).map(r => ({ id: r.id, error: r.pred.error })),
   errors: { drafts: draftRows.filter(r => r.pred?.route !== r.gold).map(r => ({ id: r.id, text: r.text, gold: r.gold, pred: r.pred?.route ?? r.pred?.error, note: r.note })) },
   raw: { drafts: draftRows, messages: msgRows }
 }
 mkdirSync(new URL('./results/', import.meta.url), { recursive: true })
-writeFileSync(new URL(`./results/${mode}.json`, import.meta.url), JSON.stringify(report, null, 2))
+writeFileSync(new URL(`./results/${outName}.json`, import.meta.url), JSON.stringify(report, null, 2))
 
-console.log(`\n== ${mode}${report.model ? ` (${report.model})` : ''} ==`)
+console.log(`\n== ${mode}${report.model ? ` (${providerName} / ${report.model})` : ''} ==`)
 console.log(`草稿路由 准确率 ${report.drafts.correct}/${report.drafts.total} (${report.drafts.accuracy})，误触发 ${report.drafts.false_triggers} (${report.drafts.false_trigger_rate})`)
 console.table(report.drafts.perClass)
 console.log('混淆矩阵（行=标注，列=预测）'); console.table(report.drafts.confusion)
 console.log('消息级字段', report.messages)
 console.log(`事件状态 ${report.events.state_accuracy}`); console.table(eventRows)
 console.log(`72h 内可联系请求：预测 ${JSON.stringify(events.actionable)}，标注 ${JSON.stringify(expectedActionable)}`)
+if (report.request_errors.length) { console.log(`\n请求失败 ${report.request_errors.length} 次（不计入准确率分母以外的字段，路由按错误计）：`); console.table(report.request_errors) }
 console.log('\n草稿误判：'); console.table(report.errors.drafts)
