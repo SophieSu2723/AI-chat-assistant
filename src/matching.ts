@@ -7,7 +7,12 @@ export type SpeechAct = 'request' | 'offer' | 'question' | 'answer' | 'experienc
 export type EventState = 'open' | 'full' | 'cancelled' | 'fulfilled'
 export type Update = { target_message_id: string; new_state: EventState | 'corrected' }
 export type MessageClass = { speech_act: SpeechAct; needs_counterpart: boolean; reusable: boolean; answers_message_id: string | null; updates: Update | null }
-export type Match = { route: Exclude<Route, 'none'>; label: string; query: string; source: Message; related: Message[] }
+export type TaskMatch = { actionable: Message[]; closed: { message: Message; state: Exclude<EventState, 'open'> }[] }
+export type KnowledgeMatch = { answer: Message }
+export type Match = { route: Exclude<Route, 'none'>; query: string; task: TaskMatch | null; knowledge: KnowledgeMatch | null }
+export type ThreadRole = 'question' | 'correction' | 'feedback' | 'repeat' | 'full' | 'arranged' | 'cancelled'
+export type DayKey = 'sun' | 'sat' | 'fri' | 'weekend' | 'today' | 'tomorrow'
+export type Details = { day: DayKey | null; place: string | null; hasTime: boolean; ride: boolean }
 
 const HOUR = 60 * 60 * 1000
 export const TASK_WINDOW_MS = 72 * HOUR
@@ -160,35 +165,88 @@ export function actionableTasks(history: Message[], nowIso: string, classes = cl
 }
 
 // ---------- 匹配 ----------
-export function findMatch(route: Route, value: string, history: Message[], nowIso: string): Match | null {
+// mixed 同时返回需求与知识两部分，界面用分区展示，不叠加两个提示
+export function findMatches(route: Route, value: string, history: Message[], nowIso: string, classes = classifyMessages(history)): Match | null {
   if (route === 'none') return null
-  const classes = classifyMessages(history)
+  const now = +new Date(nowIso)
   const rank = (pool: Message[]) => pool
     .map(message => ({ message, score: relevance(value, message) }))
     .filter(item => item.score > 0)
     .sort((a, b) => b.score - a.score || +new Date(b.message.sentAt) - +new Date(a.message.sentAt))
-  // 同分时优先内容更完整的回答
-  const rankAnswers = (pool: Message[]) => rank(pool).sort((a, b) => b.score - a.score || b.message.text.length - a.message.text.length)
 
-  const tasks = rank(actionableTasks(history, nowIso, classes))
-  // 知识候选只取实质回答；不受 72 小时窗口限制
-  const answers = rankAnswers(history.filter(m => classes[m.id].speech_act === 'answer' && classes[m.id].reusable))
-
-  const useTasks = route === 'task' || (route === 'mixed' && tasks.length > 0)
-  const pool = useTasks ? tasks : route === 'knowledge' || route === 'mixed' ? answers : []
-  const best = pool[0]?.message
-  if (!best) return null
-
-  if (useTasks) {
-    return { route: 'task', label: `发现 ${pool.length} 条可联系的近期需求`, query: value.trim(), source: best, related: pool.slice(1, 3).map(item => item.message) }
+  let task: TaskMatch | null = null
+  if (route === 'task' || route === 'mixed') {
+    const states = deriveEventStates(history, classes)
+    const recent = history.filter(m => m.id in states && now >= +new Date(m.sentAt) && now - +new Date(m.sentAt) <= TASK_WINDOW_MS)
+    const ranked = rank(recent).map(item => item.message)
+    const actionable = ranked.filter(m => states[m.id] === 'open')
+    // 已满、已约好、已取消的请求不作为可联系结果，只在折叠区中说明被排除的原因
+    const closed = ranked.filter(m => states[m.id] !== 'open').map(m => ({ message: m, state: states[m.id] as Exclude<EventState, 'open'> }))
+    if (actionable.length) task = { actionable, closed }
   }
-  // 同一讨论串中的提问、其他回答，以及针对其中任一回答的更正，一起作为来源
-  const root = classes[best.id].answers_message_id ?? best.replyToId ?? best.id
-  const thread = new Set([root, ...history.filter(m => m.replyToId === root).map(m => m.id)])
-  const related = history
-    .filter(m => m.id !== best.id && (thread.has(m.id) || (m.replyToId !== undefined && thread.has(m.replyToId))))
-    .filter(m => classes[m.id].speech_act !== 'acknowledgement')
-    .sort((a, b) => +new Date(a.sentAt) - +new Date(b.sentAt))
-    .slice(0, 3)
-  return { route: 'knowledge', label: '群内找到相关讨论', query: value.trim(), source: best, related }
+
+  let knowledge: KnowledgeMatch | null = null
+  if (route === 'knowledge' || route === 'mixed') {
+    // 知识候选只取实质回答；不受 72 小时窗口限制；同分时优先内容更完整的回答
+    const answers = rank(history.filter(m => classes[m.id].speech_act === 'answer' && classes[m.id].reusable))
+      .sort((a, b) => b.score - a.score || b.message.text.length - a.message.text.length)
+    if (answers[0]) knowledge = { answer: answers[0].message }
+  }
+
+  if (!task && !knowledge) return null
+  return { route: task && knowledge ? 'mixed' : task ? 'task' : 'knowledge', query: value.trim(), task, knowledge }
+}
+
+// ---------- 来源讨论串 ----------
+// 从一条消息出发，收集回复链和针对它的状态更新，按时间排序
+export function sourceThread(rootId: string, history: Message[], classes = classifyMessages(history)) {
+  const ids = new Set([rootId])
+  let grew = true
+  while (grew) {
+    grew = false
+    for (const m of history) {
+      if (ids.has(m.id)) continue
+      const target = classes[m.id]?.updates?.target_message_id
+      if ((m.replyToId && ids.has(m.replyToId)) || (target && ids.has(target))) { ids.add(m.id); grew = true }
+    }
+  }
+  return history.filter(m => ids.has(m.id)).sort((a, b) => +new Date(a.sentAt) - +new Date(b.sentAt))
+}
+
+// 讨论串中每条消息的角色标签，由消息级分类推出
+export function threadRoles(thread: Message[], classes: Record<string, MessageClass>): Record<string, ThreadRole> {
+  const roles: Record<string, ThreadRole> = {}
+  let asked = false
+  for (const m of thread) {
+    const c = classes[m.id]
+    if (!c) continue
+    const state = c.updates?.new_state
+    if (state === 'corrected') roles[m.id] = 'correction'
+    else if (state === 'full') roles[m.id] = 'full'
+    else if (state === 'fulfilled') roles[m.id] = 'arranged'
+    else if (state === 'cancelled') roles[m.id] = 'cancelled'
+    else if (c.speech_act === 'acknowledgement') roles[m.id] = 'feedback'
+    else if (c.speech_act === 'question') { roles[m.id] = asked ? 'repeat' : 'question'; asked = true }
+  }
+  return roles
+}
+
+// ---------- 原文中明确写出的细节 ----------
+// 只识别原文里写出的日期、地点和时间；没写就不填，界面显示“时间未定”
+const DAYS: [RegExp, DayKey][] = [
+  [/周日|星期天|星期日|礼拜天|\bsunday\b/i, 'sun'], [/周六|星期六|\bsaturday\b/i, 'sat'], [/周五|星期五|\bfriday\b/i, 'fri'],
+  [/周末|\bweekend\b/i, 'weekend'], [/今天|今晚|\btonight\b|\btoday\b/i, 'today'], [/明天|\btomorrow\b/i, 'tomorrow']
+]
+const PLACES: [RegExp, string][] = [
+  [/costco/i, 'Costco'], [/trader joe/i, 'Trader Joe’s'], [/\btarget\b/i, 'Target'], [/walmart/i, 'Walmart'], [/airport|机场/i, 'airport']
+]
+const CLOCK = /\d{1,2}[:：]\d{2}|\b\d{1,2}\s?(am|pm)\b|\d{1,2}\s?点|上午|下午|中午|晚上|\bmorning\b|\bafternoon\b|\bevening\b/i
+const RIDE = /搭车|拼车|开车|\bride\b|\bdrive\b|\bcar\b|uber|lyft/i
+export function extractDetails(text: string): Details {
+  return {
+    day: DAYS.find(([re]) => re.test(text))?.[1] ?? null,
+    place: PLACES.find(([re]) => re.test(text))?.[1] ?? null,
+    hasTime: CLOCK.test(text),
+    ride: RIDE.test(text)
+  }
 }

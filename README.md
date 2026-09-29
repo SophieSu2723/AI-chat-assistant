@@ -4,7 +4,7 @@ Discover timely needs, start focused conversations, and preserve reusable answer
 
 When someone is looking for a ride or a grocery-shopping companion, the assistant surfaces relevant messages from the past three days. Users can then chat directly about that specific request without adding each other as friends or filling the main group feed with coordination details.
 
-> Status: Working single-browser demo with fictional data and rule-based (simulated) matching. Build-plan steps 1–2 are largely complete and parts of steps 3–5 are in place; see [build-plan.md](build-plan.md) for item-level status. No AI model is connected yet. The behaviors described below are the full product requirements, and not all of them are implemented.
+> Status: Working single-browser demo with fictional data and rule-based (simulated) matching. Both MVP flows — the task flow and the knowledge flow — run end to end, following the high-fidelity design in [design_handoff_campus_circle_flows/](design_handoff_campus_circle_flows/README.md). See [build-plan.md](build-plan.md) for item-level status. No AI model is connected yet, and no user testing has been done. The behaviors described below are the full product requirements, and not all of them are implemented.
 
 The product has two complementary card types: **Immediate Task Cards** help members find people to coordinate with; **Knowledge Cards** preserve source-backed answers for future questions.
 
@@ -187,16 +187,23 @@ Use small task-based studies to record discovery, completion, misunderstandings,
 
 ## Local demo (current implementation)
 
-The demo runs entirely in one browser with fictional data and rule-based matching. It currently includes:
+The demo runs entirely in one browser with fictional data and rule-based matching. The UI follows the design handoff: chat screens keep the messenger look, and AI surfaces (suggestion line, sheets, source viewer, cards) use a separate visual layer so members can tell AI-generated content from people's messages. It currently includes:
 
-- **Group chat:** 82 fictional bilingual messages, a fixed demo clock (2026-09-17 18:30, UTC+8), a composer, sending, and pasted WeChat text import.
+- **Group chat:** 82 fictional bilingual messages, a fixed demo clock shown in the header (2026-09-17 18:30, UTC+8), a composer, sending, and pasted WeChat text import. Three tabs: Group, Chats, and Knowledge.
+- **中文 / EN:** all UI copy switches language (`src/i18n.ts`). Message text, names, and times are app data and are never translated.
 - **Intent routing:** `src/matching.ts` routes drafts to task, knowledge, mixed, or no action. Casual talk, past experiences, confirmations, and status updates stay quiet; "does anyone know…" questions route to knowledge.
 - **Private prompts:** a single-line prompt after about 800 ms of inactivity, Chinese IME handling, stale-result prevention, dismissal, draft persistence, manual search with loading and no-results feedback, and reset.
-- **Task matching:** follow-ups are tracked through reply chains, so requests that are full, cancelled, or already arranged are not suggested. Only open requests from the preceding 72 hours are actionable.
-- **Knowledge matching:** only substantive answers are used as sources, with no 72-hour cutoff. The result includes the original question, other answers, and later corrections from the same thread.
-- **Result sheet:** shows the source message and related messages, opens a demo one-to-one chat for task results, and saves a local knowledge draft.
+- **Task results:** only open requests from the preceding 72 hours are actionable. Tags show only the day and place written in the original message, plus "time not set" when none is stated. Requests closed by follow-ups (full, arranged, cancelled) are listed under a collapsed "closed requests" disclosure so the exclusion is visible.
+- **Mixed intent:** one sheet with two labeled sections (people to contact, answers already in the group), never two stacked prompts.
+- **Source viewer:** a stacked sheet showing the original thread in order, with the cited message framed and other messages tagged by role (question, correction, feedback, asked again, marked full, arranged).
+- **Temporary conversations:** an editable opening draft that restates only what the request says; nothing is created or sent until the user taps Send. One conversation per request and participant (reopened, not duplicated), the original request pinned at the top, labeled simulated replies, and an ongoing-chats list.
+- **Knowledge cards:** question-titled cards with claim-level source chips, applicability, unknowns, signals, and separate source, generated, and reviewed dates. A card enters "needs review" automatically when message classification finds a later correction of one of its sources. Simulated reviewer mode shows each affected claim with keep/use-correction decisions; publishing creates v2, keeps v1 in history, and updates the review date only on publish.
+- **Knowledge area:** published and needs-review cards, plus an "asked, not answered" section for repeated questions that have no answer and therefore get no card.
+- **Persistence:** drafts, sent messages, imports, conversations, card versions, and saves are stored in localStorage under `campus-circle:*`; Reset clears them.
 
-Not yet implemented: the source viewer, per-request conversation deduplication and the ongoing-chat list, labeled sections for mixed intent, knowledge eligibility records, review and publication, the group knowledge area, and feedback and version history.
+Not yet implemented: knowledge eligibility records and AI-discovered candidates (the two cards are fixtures whose claims cite real fixture messages), member-initiated "Save as knowledge", helpful votes and correction reports beyond a simulated toast, archiving, answering follow-ups from group evidence (Ask follow-up currently drafts a group question), server-side model integration, and user testing.
+
+Code map: `src/App.tsx` (state and screen flow), `src/components/` (sheets, conversation screens, tabs, card screen, demo panel), `src/matching.ts` (routing, classification, matching, source threads), `src/knowledge.ts` (card fixtures and status), `src/i18n.ts` (copy), `src/ui.ts` (people, time formatting, opening-message template).
 
 ```bash
 npm install

@@ -1,6 +1,8 @@
 # Handoff: Campus Circle: refined AI flows
 
-Target repo: `SophieSu2723/AI-chat-assistant` (branch `main`). Target app: React + TypeScript + Vite, mobile-first PWA (`src/App.tsx`, `src/styles.css`, `src/import.css`, `src/matching.ts`, `src/fixtures.ts`).
+Target repo: `SophieSu2723/AI-chat-assistant` (branch `main`).
+
+> Implementation status (2026-09-30): this design is implemented in `src/` (see the repo README's “Local demo” section). The React app derives results from `src/matching.ts` instead of the prototype's keyword stand-in, so the same six demo drafts produce the same screens. The prototype files remain the visual reference. Target app: React + TypeScript + Vite, mobile-first PWA (`src/App.tsx`, `src/styles.css`, `src/import.css`, `src/matching.ts`, `src/fixtures.ts`).
 
 ## Overview
 This redesign covers the private-suggestion and knowledge surfaces described in the repo's README and `build-plan.md` steps 2–7:
@@ -94,7 +96,7 @@ The frame is iPhone 390×844 with a 44px status bar. The app max-width stays 620
 ### B. Result sheet (bottom sheet over a scrim)
 - `--color-bg`, radius `16px 16px 0 0`, max-height 86%, padding `10px 16px 30px`, 12px gap. It has a 36×4 handle.
 - Header: kicker `仅你可见 · 模拟匹配` / `Only you see this · simulated matching`. Title in Barlow Condensed 24px: `相关即时需求` / `来自群知识` / `需求与已有回答` (Related requests / From group knowledge / Requests and answers). Close is ×.
-- **Mixed intent**: two labeled sections, `01 · 可以联系的人 / People to contact` and `02 · 群里已有的回答 / Answers already in this group`. Section labels are 10px uppercase neutral-600. Never stack two prompts.
+- **Mixed intent**: two labeled sections, `01 · 可以联系的人 / People to contact` and `02 · 群里已有的回答 / Answers already in this group`. Section labels are 10px uppercase neutral-700. Never stack two prompts.
 - **Task result frame** (1px divider, 7px radius, padding 14px):
   - Avatar (28px) with name and time.
   - The original text at 15px/1.45.
@@ -132,7 +134,7 @@ The frame is iPhone 390×844 with a 44px status bar. The app max-width stays 620
 - Header `Ravi Shah` with sub `即时对话 · 演示模式`.
 - **Pinned request** (tappable, opens the source viewer): `--color-bg` frame, 7px, margin `12px 13px 4px`, padding `11px 13px`. Kicker `关于这条需求 · Campus Circle` with the time, the original text at 14px, and tags (`周日`, `Trader Joe’s`, `时间未定`, outline `是否仍需要：未知`).
 - Center label: `此对话不会出现在群聊中` (11px `#9d9da1`).
-- Simulated replies arrive about 1.6s after the first send, preceded by `Ravi 正在输入…（模拟）`. The reply means the same in both languages: `还需要！下午 3 点左右我可以。` / `Yes, still looking! Around 3pm works for me.` Each simulated reply has a 10px uppercase neutral-600 caption `模拟回复 / Simulated reply` under it.
+- Simulated replies arrive about 1.6s after the first send, preceded by `Ravi 正在输入…（模拟）`. The reply means the same in both languages: `还需要！下午 3 点左右我可以。` / `Yes, still looking! Around 3pm works for me.` Each simulated reply has a 10px uppercase neutral-700 caption `模拟回复 / Simulated reply` under it.
 
 ### F. Chats (tab, option 5a)
 - Cards: `--color-bg`, divider border, 7px, padding `12px 14px`, 37px avatar column.
@@ -151,7 +153,7 @@ The frame is iPhone 390×844 with a 44px status bar. The app max-width stays 620
 - Tags row: status, `vN`, and when under review `2 / 4 条结论受影响`.
 - **Banner (needs review, reviewer off)**: accent-700 1px frame. The alert title `新消息与此卡片内容冲突`, then a 2-column comparison, `卡片 v1 · 9/2: 室内换乘；每 30 分钟一班` against `Leo · 9/14: 现为室外换乘；周日每小时一班`. The note explains the card is hidden from automatic suggestions until reviewed. Directly under the banner is an 11px neutral-700 line: `正式版中仅指定审核人可见此开关。` / `Only designated reviewers see this switch in the real app.`
 - Question in Barlow Condensed 28px/1.05.
-- **Claims**: grid `16px | 1fr | auto`, with the number in Barlow Condensed neutral-600, the text at 14px/1.45, and a source chip button (`Mia · 9/2`, accent tag, 7px radius) that opens the source viewer with that message highlighted. Flagged claims (reviewer off) are shown in neutral-700 `#5d5d60` with `已被后续消息更正` below.
+- **Claims**: grid `16px | 1fr | auto`, with the number in Barlow Condensed neutral-700, the text at 14px/1.45, and a source chip button (`Mia · 9/2`, accent tag, 7px radius) that opens the source viewer with that message highlighted. Flagged claims (reviewer off) are shown in neutral-700 `#5d5d60` with `已被后续消息更正` below.
 - **Reviewer on**: flagged claims become accent-bordered frames. Each shows the old text struck through, the proposed text, a `来自 Leo · 9/14 ›` link to the source, and toggle buttons `保留 v1` / `采用更正` in a 2-column grid (each full cell width, 32px high, nowrap). The selected button gets an accent border, accent-100 fill and a ✓.
 - Applicability: 3 equal cells with divider borders (`出发地 校园 · 学期 2026 秋季 · 日期 周日不同`).
 - `群内未提及` (unknowns) and `依据` (signals: question episodes, answerers, corrections, "That solved it").
@@ -191,7 +193,7 @@ reviewDecisions: Record<claimId, 'keep' | 'use'>
 reviewerMode: boolean                  // explicitly simulated
 saves: string[]; toast: string
 ```
-- `findMatch` should return both the task and knowledge parts for `mixed` instead of falling back to one.
+- `findMatch` should return both the task and knowledge parts for `mixed` instead of falling back to one. *(Implemented as `findMatches` in `src/matching.ts`.)*
 - Cards with `needs-review` are excluded from *authoritative* suggestions but still surfaced with the warning label. Archived cards are never suggested.
 - Persist to localStorage under the existing `campus-circle:*` keys, and extend the Reset action to clear the new keys.
 

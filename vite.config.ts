@@ -11,8 +11,8 @@ export default defineConfig({
         name: 'Campus Circle',
         short_name: 'Campus Circle',
         description: 'A mobile-first campus chat assistant demo.',
-        theme_color: '#5b5bd6',
-        background_color: '#f7f7fb',
+        theme_color: '#ffffff',
+        background_color: '#f5f5f5',
         display: 'standalone',
         start_url: '/',
         icons: [

@@ -1,74 +1,269 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { DEMO_NOW, GROUP, authorFor, messages, type Message } from './fixtures'
-import { findMatch, routeIntent, type Match } from './matching'
+import { DEMO_NOW, GROUP, messages, type Message } from './fixtures'
+import { COPY, type Lang } from './i18n'
+import { classifyMessages, findMatches, routeIntent, sourceThread, threadRoles, type Match } from './matching'
+import { CARDS, cardForAnswer, cardStatus, initialCardState, unansweredTopics, type CardState, type KnowledgeCardDef, type ReviewDecision } from './knowledge'
+import { openingFor, personFor, shortTime, simulatedReply, type Conversation, type ImportedMessage } from './ui'
+import { Close, Sparkle } from './icons'
+import { Avatar } from './components/Avatar'
+import { ResultSheet, SourceSheet, type SourceView } from './components/Sheets'
+import { ChatScreen, DraftScreen } from './components/Conversation'
+import { ChatsTab, KnowledgeTab } from './components/Tabs'
+import { CardScreen } from './components/CardScreen'
+import { DemoPanel, ImportSheet, MenuSheet, TRY_DRAFTS, type Outcome } from './components/DemoPanel'
 
-type ConversationMessage = { id: string; sender: 'me' | 'ravi'; text: string; sentAt: string }
-type KnowledgeCard = { id: string; question: string; answer: string; sourceIds: string[]; createdAt: string; status: 'draft' }
-const DRAFT_KEY = 'campus-circle:draft'
-const DISMISS_KEY = 'campus-circle:dismissed-draft'
-const CHAT_KEY = 'campus-circle:ravi-chat'
-const IMPORT_KEY = 'campus-circle:imported-messages'
-const KNOWLEDGE_KEY = 'campus-circle:knowledge-drafts'
-const palette = ['#5d8ed5', '#ee7662', '#4da7a0', '#ba699b', '#e2a940', '#7558d9']
+const KEY = {
+  lang: 'campus-circle:lang', draft: 'campus-circle:draft', dismissed: 'campus-circle:dismissed-draft',
+  imported: 'campus-circle:imported-messages', sent: 'campus-circle:sent', conversations: 'campus-circle:conversations',
+  cards: 'campus-circle:cards', saves: 'campus-circle:saves'
+}
+// 早期版本使用过的键，重置时一并清除
+const LEGACY_KEYS = ['campus-circle:ravi-chat', 'campus-circle:knowledge-drafts']
+const FEED_SINCE = +new Date('2026-09-14T18:30:00+08:00')
 
-type ImportedMessage = Message & { senderName: string }
-function loadImportedMessages(): ImportedMessage[] { try { return JSON.parse(localStorage.getItem(IMPORT_KEY) ?? '[]') } catch { return [] } }
-function loadKnowledgeCards(): KnowledgeCard[] { try { return JSON.parse(localStorage.getItem(KNOWLEDGE_KEY) ?? '[]') } catch { return [] } }
-function initials(name: string) { return name.trim().slice(0, 2).toUpperCase() || '群友' }
-function importColor(name: string) { return palette[[...name].reduce((sum, char) => sum + char.codePointAt(0)!, 0) % palette.length] }
-function parseWechatText(value: string): ImportedMessage[] {
-  const lines = value.replace(/\r/g, '').split('\n').map(line => line.trim()).filter(Boolean)
-  const parsed: ImportedMessage[] = []
-  for (let index = 0; index < lines.length - 1;) {
-    const name = lines[index]
-    const match = lines[index + 1].match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})\s+(\d{1,2}):(\d{2})$/)
-    if (!match) { index += 1; continue }
-    index += 2
-    const content: string[] = []
-    while (index < lines.length && !(index + 1 < lines.length && /^\d{4}[/-]\d{1,2}[/-]\d{1,2}\s+\d{1,2}:\d{2}$/.test(lines[index + 1]))) content.push(lines[index++])
-    const text = content.join('\n')
-    if (!text || /^\[(Photo|图片|Sticker|表情|Video|视频|File|文件)\]/i.test(text)) continue
-    const [, year, month, day, hour, minute] = match
-    const senderId = `import-${encodeURIComponent(name).replace(/%/g, '')}`
-    parsed.push({ id: `import-${Date.now()}-${parsed.length}`, groupId: GROUP.id, senderId, senderName: name, text, sentAt: `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hour.padStart(2, '0')}:${minute}:00+08:00` })
-  }
-  return parsed
+function load<T>(key: string, fallback: T): T {
+  try { const raw = localStorage.getItem(key); return raw === null ? fallback : JSON.parse(raw) as T } catch { return fallback }
+}
+function usePersisted<T>(key: string, initial: T) {
+  const [value, setValue] = useState<T>(() => load(key, initial))
+  useEffect(() => { try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* 存储不可用时仅保留内存状态 */ } }, [key, value])
+  return [value, setValue] as const
 }
 
-function displayName(message: Message) { const imported = message as ImportedMessage; return imported.senderName || authorFor(message.senderId).name }
-function dateLabel(iso: string) { return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai' }).format(new Date(iso)) }
-function loadChat(): ConversationMessage[] { try { return JSON.parse(localStorage.getItem(CHAT_KEY) ?? '[]') } catch { return [] } }
+type Tab = 'group' | 'chats' | 'knowledge'
+type Screen = 'main' | 'draft' | 'chat' | 'card'
 
 export function App() {
-  const [draft, setDraft] = useState(() => localStorage.getItem(DRAFT_KEY) ?? '')
+  const [lang, setLang] = usePersisted<Lang>(KEY.lang, 'zh')
+  const [draft, setDraft] = usePersisted(KEY.draft, '')
+  const [dismissed, setDismissed] = usePersisted(KEY.dismissed, '')
+  const [imported, setImported] = usePersisted<ImportedMessage[]>(KEY.imported, [])
+  const [sent, setSent] = usePersisted<Message[]>(KEY.sent, [])
+  const [conversations, setConversations] = usePersisted<Conversation[]>(KEY.conversations, [])
+  const [cardStates, setCardStates] = usePersisted<Record<string, CardState>>(KEY.cards, {})
+  const [saves, setSaves] = usePersisted<string[]>(KEY.saves, [])
+
+  const [tab, setTab] = useState<Tab>('group')
+  const [screen, setScreen] = useState<Screen>('main')
+  const [requestId, setRequestId] = useState<string | null>(null)
+  const [conversationId, setConversationId] = useState<string | null>(null)
+  const [cardId, setCardId] = useState<string | null>(null)
   const [suggestion, setSuggestion] = useState<Match | null>(null)
   const [searchState, setSearchState] = useState<'idle' | 'loading' | 'empty'>('idle')
   const [composing, setComposing] = useState(false)
-  const [sheet, setSheet] = useState(false)
-  const [screen, setScreen] = useState<'group' | 'chat'>('group')
-  const [chatSource, setChatSource] = useState<Message | null>(null)
-  const [sent, setSent] = useState<Message[]>([])
-  const [imported, setImported] = useState<ImportedMessage[]>(loadImportedMessages)
-  const [knowledgeCards, setKnowledgeCards] = useState<KnowledgeCard[]>(loadKnowledgeCards)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [showClosed, setShowClosed] = useState(false)
+  const [source, setSource] = useState<SourceView | null>(null)
+  const [opening, setOpening] = useState('')
+  const [reviewer, setReviewer] = useState(false)
+  const [typingIn, setTypingIn] = useState<string | null>(null)
+  const [toast, setToast] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+
+  const t = COPY[lang]
   const revision = useRef(0)
-  const dismissed = useRef(localStorage.getItem(DISMISS_KEY) ?? '')
-  // 匹配使用完整群历史：任务卡在 matching.ts 中按 72 小时过滤，知识卡不受时间窗口限制
+  const feedRef = useRef<HTMLElement>(null)
+  const timers = useRef<number[]>([])
+  const view = useRef({ screen, conversationId })
+  view.current = { screen, conversationId }
+
+  // 匹配使用完整群历史：任务在 matching.ts 中按 72 小时过滤，知识不受时间窗口限制
   const history = useMemo(() => [...messages, ...imported, ...sent], [imported, sent])
-  const feed = useMemo(() => [...messages.filter(x => new Date(x.sentAt) >= new Date('2026-09-14T18:30:00+08:00')), ...imported, ...sent].sort((a, b) => +new Date(a.sentAt) - +new Date(b.sentAt)), [imported, sent])
-  useEffect(() => { localStorage.setItem(DRAFT_KEY, draft) }, [draft])
-  useEffect(() => { localStorage.setItem(IMPORT_KEY, JSON.stringify(imported)) }, [imported])
-  useEffect(() => { localStorage.setItem(KNOWLEDGE_KEY, JSON.stringify(knowledgeCards)) }, [knowledgeCards])
-  useEffect(() => { const current = ++revision.current; setSuggestion(null); setSearchState('idle'); if (composing || !draft.trim() || dismissed.current === draft) return; const timer = window.setTimeout(() => { if (current === revision.current) { const result = findMatch(routeIntent(draft), draft, history, DEMO_NOW); if (result) setSuggestion(result) } }, 800); return () => window.clearTimeout(timer) }, [draft, composing, history])
-  const manualSearch = () => { const current = ++revision.current; setSuggestion(null); setSearchState('loading'); window.setTimeout(() => { if (current !== revision.current) return; const result = findMatch(routeIntent(draft), draft, history, DEMO_NOW); if (result) { setSuggestion(result); setSheet(true); setSearchState('idle') } else setSearchState('empty') }, 350) }
-  const send = () => { if (!draft.trim()) return; setSent(s => [...s, { id: `local-${Date.now()}`, groupId: GROUP.id, senderId: 'me', text: draft.trim(), sentAt: DEMO_NOW }]); setDraft(''); setSuggestion(null) }
-  const saveKnowledge = (result: Match) => { const sourceIds = [result.source, ...result.related].map(message => message.id); setKnowledgeCards(cards => cards.some(card => card.question === result.query && card.sourceIds[0] === result.source.id) ? cards : [{ id: `knowledge-${Date.now()}`, question: result.query, answer: result.source.text, sourceIds, createdAt: new Date().toISOString(), status: 'draft' }, ...cards]) }
-  const reset = () => { [DRAFT_KEY, DISMISS_KEY, CHAT_KEY, IMPORT_KEY, KNOWLEDGE_KEY].forEach(key => localStorage.removeItem(key)); dismissed.current = ''; setDraft(''); setSuggestion(null); setSent([]); setImported([]); setKnowledgeCards([]); setSearchState('idle') }
-  if (screen === 'chat' && chatSource) return <InstantChat source={chatSource} onBack={() => setScreen('group')} />
-  return <main className="app group-page"><header className="chat-header"><button className="back muted" aria-label="返回">‹</button><div><h1>{GROUP.name}</h1><p>⌄ 24 人在线 · 知识草稿 {knowledgeCards.length}</p></div><button className="menu" aria-label="更多">☰</button></header><section className="feed" aria-label="群消息">{feed.map(message => <MessageRow key={message.id} message={message} />)}</section><section className="composer-wrap">{suggestion && <div className="suggestion"><button className="suggestion-main" onClick={() => setSheet(true)}><span className="spark">✦</span>{suggestion.label}<span>查看 ›</span></button><button className="dismiss" aria-label="关闭建议" onClick={() => { dismissed.current = draft; localStorage.setItem(DISMISS_KEY, draft); setSuggestion(null) }}>×</button></div>}{searchState === 'empty' && <div className="empty">未发现可用的相关需求或群内资料；你仍可直接发送。</div>}<div className="composer"><button className="plus" aria-label="导入群消息" onClick={() => setImportOpen(true)}>＋</button><textarea aria-label="消息内容" value={draft} placeholder="发消息…" onChange={e => { dismissed.current = ''; localStorage.removeItem(DISMISS_KEY); setDraft(e.target.value) }} onCompositionStart={() => setComposing(true)} onCompositionEnd={() => setComposing(false)} /><button className="search" onClick={manualSearch} disabled={!draft.trim() || searchState === 'loading'}>{searchState === 'loading' ? '…' : '⌕'}</button><button className="send" onClick={send} disabled={!draft.trim()}>发送</button></div></section>{sheet && suggestion && <ResultSheet result={suggestion} onClose={() => setSheet(false)} onSaveKnowledge={() => saveKnowledge(suggestion)} onChat={() => { setChatSource(suggestion.source); setSheet(false); setScreen('chat') }} />}{importOpen && <ImportSheet onClose={() => setImportOpen(false)} onImport={items => { setImported(items); setImportOpen(false) }} />}<button className="reset reset-float" onClick={reset}>重置演示</button></main>
+  const classes = useMemo(() => classifyMessages(history), [history])
+  const feed = useMemo(() => history.filter(m => +new Date(m.sentAt) >= FEED_SINCE || m.id.startsWith('import-') || m.senderId === 'me')
+    .sort((a, b) => +new Date(a.sentAt) - +new Date(b.sentAt)), [history])
+  const messageFor = (id: string) => history.find(m => m.id === id)
+  const cardState = (id: string) => cardStates[id] ?? initialCardState()
+  const match = (text: string) => findMatches(routeIntent(text), text, history, DEMO_NOW, classes)
+  const outcomes = useMemo<Outcome[]>(() => TRY_DRAFTS.map(d => findMatches(routeIntent(d), d, history, DEMO_NOW, classes)?.route ?? 'none'), [history, classes])
+
+  useEffect(() => { document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en' }, [lang])
+  useEffect(() => () => timers.current.forEach(clearTimeout), [])
+  useEffect(() => { if (tab === 'group' && screen === 'main') feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight }) }, [feed.length, tab, screen, suggestion, searchState])
+
+  // 自动建议：停止输入约 800ms 后检查；输入法组合期间不触发；已关闭的草稿不再提示；旧结果不会覆盖新结果
+  useEffect(() => {
+    const current = ++revision.current
+    setSuggestion(null); setSearchState('idle')
+    if (composing || !draft.trim() || dismissed === draft) return
+    const timer = window.setTimeout(() => { if (current === revision.current) { const result = match(draft); if (result) setSuggestion(result) } }, 800)
+    return () => window.clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, composing, dismissed, history])
+
+  const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)) }
+  const showToast = (message: string) => { setToast(message); later(() => setToast(current => current === message ? '' : current), 2200) }
+  const closeOverlays = () => { setSheetOpen(false); setSource(null); setMenuOpen(false); setImportOpen(false) }
+
+  const manualSearch = () => {
+    const current = ++revision.current
+    setSuggestion(null); setSearchState('loading')
+    later(() => {
+      if (current !== revision.current) return
+      const result = match(draft)
+      if (result) { setSuggestion(result); setShowClosed(false); setSheetOpen(true); setSearchState('idle') } else setSearchState('empty')
+    }, 350)
+  }
+  // 发送永远不被拦截
+  const send = () => {
+    if (!draft.trim()) return
+    setSent(list => [...list, { id: `local-${Date.now()}`, groupId: GROUP.id, senderId: 'me', text: draft.trim(), sentAt: DEMO_NOW }])
+    setDraft(''); setSuggestion(null); setSearchState('idle')
+  }
+  const startDraft = (text: string) => { closeOverlays(); setScreen('main'); setTab('group'); setDismissed(''); setDraft(text) }
+
+  // ---------- 来源 ----------
+  const showThread = (thread: Message[], highlightId: string | null) => setSource({ thread, highlightId, roles: threadRoles(thread, classes) })
+  const openTaskSource = (message: Message) => showThread(sourceThread(message.id, history, classes), message.id)
+  const cardThread = (card: KnowledgeCardDef) => card.threadIds.map(messageFor).filter((m): m is Message => !!m)
+  const openAnswerSource = (answer: Message, card?: KnowledgeCardDef) => {
+    if (card) return showThread(cardThread(card), answer.id)
+    const root = classes[answer.id]?.answers_message_id ?? answer.replyToId ?? answer.id
+    showThread(sourceThread(root, history, classes), answer.id)
+  }
+
+  // ---------- 临时对话 ----------
+  const findConversation = (message: Message) => conversations.find(c => c.sourceMessageId === message.id && c.participantId === message.senderId)
+  const openConversation = (c: Conversation) => {
+    setConversations(list => list.map(x => x.id === c.id ? { ...x, unread: 0 } : x))
+    setConversationId(c.id); setRequestId(c.sourceMessageId); setScreen('chat')
+  }
+  const chatAbout = (message: Message) => {
+    closeOverlays()
+    const existing = findConversation(message)
+    if (existing) return openConversation(existing)
+    setRequestId(message.id); setOpening(openingFor(message, lang, t)); setScreen('draft')
+  }
+  // 只有发送第一条消息时才创建对话
+  const sendOpening = () => {
+    const request = requestId ? messageFor(requestId) : undefined
+    if (!request || !opening.trim()) return
+    const id = `conv-${request.id}-${request.senderId}`
+    const conversation: Conversation = {
+      id, groupId: GROUP.id, sourceMessageId: request.id, participantId: request.senderId, participantName: personFor(request).name,
+      createdAt: DEMO_NOW, unread: 0, messages: [{ id: `${id}-0`, mine: true, text: opening.trim(), sentAt: DEMO_NOW }]
+    }
+    setConversations(list => [...list.filter(c => c.id !== id), conversation])
+    setConversationId(id); setScreen('chat'); setTypingIn(id)
+    const reply = simulatedReply(request, lang)
+    later(() => {
+      setTypingIn(current => current === id ? null : current)
+      const viewing = view.current.screen === 'chat' && view.current.conversationId === id
+      setConversations(list => list.map(c => c.id === id ? { ...c, unread: viewing ? 0 : c.unread + 1, messages: [...c.messages, { id: `${id}-sim`, mine: false, text: reply, sentAt: DEMO_NOW, simulated: true }] } : c))
+    }, 1600)
+  }
+  const sendChat = (text: string) => setConversations(list => list.map(c => c.id === conversationId ? { ...c, messages: [...c.messages, { id: `${c.id}-${Date.now()}`, mine: true, text, sentAt: DEMO_NOW }] } : c))
+
+  // ---------- 知识卡片 ----------
+  const openCard = (card: KnowledgeCardDef) => { closeOverlays(); setCardId(card.id); setReviewer(false); setScreen('card') }
+  const decide = (id: string, n: number, d: ReviewDecision) => setCardStates(all => { const s = all[id] ?? initialCardState(); return { ...all, [id]: { ...s, decisions: { ...s.decisions, [n]: d } } } })
+  // 发布新版本：保留 v1 历史，只有此时才更新复核日期
+  const publish = (card: KnowledgeCardDef) => {
+    setCardStates(all => {
+      const s = all[card.id] ?? initialCardState()
+      return { ...all, [card.id]: { ...s, version: s.version + 1, reviewedLabel: { zh: '9/17 · 你（模拟）', en: '9/17 · You (simulated)' }, history: `v${s.version + 1} · 9/17 · ${s.history ?? card.review.history}` } }
+    })
+    setReviewer(false); showToast(t.toastPublished)
+  }
+
+  const reset = () => {
+    [...Object.values(KEY), ...LEGACY_KEYS].forEach(key => { try { localStorage.removeItem(key) } catch { /* ignore */ } })
+    timers.current.forEach(clearTimeout); timers.current = []; revision.current++
+    setDraft(''); setDismissed(''); setImported([]); setSent([]); setConversations([]); setCardStates({}); setSaves([])
+    setSuggestion(null); setSearchState('idle'); closeOverlays(); setScreen('main'); setTab('group'); setTypingIn(null); setReviewer(false)
+  }
+
+  const suggestionLabel = (() => {
+    if (!suggestion) return ''
+    const n = suggestion.task?.actionable.length ?? 0
+    if (suggestion.route === 'mixed') return t.promptMixed(n)
+    if (suggestion.route === 'task') return t.promptTask(n)
+    const card = suggestion.knowledge ? cardForAnswer(suggestion.knowledge.answer.id) : undefined
+    return card && cardStatus(card, cardState(card.id), classes) === 'needs-review' ? t.promptKnowReview : t.promptKnow
+  })()
+
+  const panel = <DemoPanel t={t} lang={lang} outcomes={outcomes} onLang={setLang} onTry={startDraft} onImport={() => { setMenuOpen(false); setImportOpen(true) }} onReset={reset} />
+  const request = requestId ? messageFor(requestId) : undefined
+  const conversation = conversations.find(c => c.id === conversationId)
+  const card = CARDS.find(c => c.id === cardId)
+
+  return (
+    <div className="stage">
+      <div className="app">
+        {screen === 'main' && (
+          <main className="screen">
+            <header className="chat-header">
+              <span className="back muted" aria-hidden="true">‹</span>
+              <div><h1>{t.group}</h1><p>{t.online}</p></div>
+              <button className="menu" onClick={() => setMenuOpen(true)} aria-label={t.menu}>☰</button>
+            </header>
+            <nav className="tabs" role="tablist">
+              {([['group', t.tabGroup], ['chats', conversations.length ? `${t.tabChats} · ${conversations.length}` : t.tabChats], ['knowledge', t.tabKnow]] as [Tab, string][]).map(([key, label]) => (
+                <button key={key} role="tab" aria-selected={tab === key} onClick={() => setTab(key)}>{label}</button>
+              ))}
+            </nav>
+
+            {tab === 'group' && <>
+              <section className="feed" aria-label={t.tabGroup} ref={feedRef}>
+                {feed.map(message => { const person = personFor(message); return (
+                  <article className="message" key={message.id}>
+                    <Avatar person={message.senderId === 'me' ? { initials: t.meIni, color: '#7558d9' } : person} />
+                    <div><div className="meta"><strong>{message.senderId === 'me' ? t.you : person.name}</strong><time>{shortTime(message.sentAt)}</time></div><p>{message.text}</p></div>
+                  </article>
+                ) })}
+              </section>
+              <footer className="composer-wrap">
+                {suggestion && !sheetOpen && (
+                  <div className="suggestion">
+                    <button className="suggestion-main" onClick={() => { setShowClosed(false); setSheetOpen(true) }}>
+                      <Sparkle color="var(--accent)" /><span className="suggestion-label">{suggestionLabel}</span><span className="suggestion-view">{t.view} ›</span>
+                    </button>
+                    <button className="icon-btn dismiss" aria-label={t.dismiss} onClick={() => { setDismissed(draft); setSuggestion(null) }}><Close size={16} /></button>
+                  </div>
+                )}
+                {searchState === 'empty' && <div className="empty">{t.empty}</div>}
+                <div className="composer">
+                  <button className="plus" aria-label={t.importLabel} onClick={() => setImportOpen(true)}>＋</button>
+                  <textarea aria-label={t.placeholder} placeholder={t.placeholder} value={draft}
+                    onChange={e => { setDismissed(''); setDraft(e.target.value) }}
+                    onCompositionStart={() => setComposing(true)} onCompositionEnd={() => setComposing(false)} />
+                  <button className="search" aria-label={t.searchGroup} onClick={manualSearch} disabled={!draft.trim() || searchState === 'loading'}>{searchState === 'loading' ? '…' : '⌕'}</button>
+                  <button className="send" onClick={send} disabled={!draft.trim()}>{t.send}</button>
+                </div>
+              </footer>
+            </>}
+            {tab === 'chats' && <ChatsTab conversations={conversations} requestFor={messageFor} t={t} onOpen={openConversation} />}
+            {tab === 'knowledge' && <KnowledgeTab t={t} lang={lang} classes={classes} cardState={cardState} unanswered={unansweredTopics(history, classes)} onOpen={openCard} />}
+          </main>
+        )}
+
+        {screen === 'draft' && request && <DraftScreen request={request} t={t} opening={opening} onOpening={setOpening} onCancel={() => setScreen('main')} onSend={sendOpening} />}
+        {screen === 'chat' && request && conversation && (
+          <ChatScreen conversation={conversation} request={request} t={t} typing={typingIn === conversation.id}
+            onBack={() => setScreen('main')} onSource={() => openTaskSource(request)} onSend={sendChat} />
+        )}
+        {screen === 'card' && card && (
+          <CardScreen card={card} state={cardState(card.id)} t={t} lang={lang} classes={classes} messageFor={messageFor}
+            reviewer={reviewer} saved={saves.includes(card.id)}
+            onBack={() => { setSource(null); setScreen('main') }} onToggleReviewer={() => setReviewer(on => !on)}
+            onDecide={(n, d) => decide(card.id, n, d)} onPublish={() => publish(card)}
+            onSource={id => showThread(cardThread(card), id)}
+            onSave={() => setSaves(list => list.includes(card.id) ? list.filter(x => x !== card.id) : [...list, card.id])}
+            onCorrect={() => showToast(t.toastCorrect)} onAsk={() => startDraft(t.followDraft)} />
+        )}
+
+        {sheetOpen && suggestion && screen === 'main' && (
+          <ResultSheet match={suggestion} t={t} lang={lang} classes={classes} conversations={conversations} cardState={cardState}
+            showClosed={showClosed} onToggleClosed={() => setShowClosed(v => !v)} onClose={() => setSheetOpen(false)}
+            onTaskSource={openTaskSource} onAnswerSource={openAnswerSource} onChat={chatAbout} onOpenCard={openCard} />
+        )}
+        {source && <SourceSheet view={source} t={t} onClose={() => setSource(null)} />}
+        {menuOpen && <MenuSheet t={t} onClose={() => setMenuOpen(false)}>{panel}</MenuSheet>}
+        {importOpen && <ImportSheet t={t} onClose={() => setImportOpen(false)} onImport={items => { setImported(list => [...list, ...items]); setImportOpen(false); setTab('group') }} />}
+        {toast && <div className="toast" role="status">{toast}</div>}
+      </div>
+      <aside className="demo-aside" aria-label={t.menu}>{panel}</aside>
+    </div>
+  )
 }
-function MessageRow({ message }: { message: Message }) { const imported = message as ImportedMessage; const author = imported.senderName ? { name: imported.senderName, initials: initials(imported.senderName), color: importColor(imported.senderName) } : authorFor(message.senderId); return <article className="message"><div className="avatar" style={{ background: author.color }}>{author.initials}</div><div><div className="meta"><strong>{author.name}</strong><time>{dateLabel(message.sentAt)}</time></div><p>{message.text}</p></div></article> }
-function ResultSheet({ result, onClose, onChat, onSaveKnowledge }: { result: Match; onClose: () => void; onChat: () => void; onSaveKnowledge: () => void }) { const task = result.route === 'task'; const [saved, setSaved] = useState(false); return <div className="scrim"><section className="sheet" role="dialog" aria-modal="true" aria-label="私密建议"><div className="handle" /><div className="sheet-head"><div><span className="eyebrow">仅你可见 · 本地来源匹配</span><h2>{task ? '相关即时需求' : '知识草稿候选'}</h2></div><button onClick={onClose} aria-label="关闭">×</button></div><article className={`result ${task ? 'clickable' : ''}`} onClick={task ? onChat : undefined}><span className="badge">{task ? '仍需确认' : '草稿 · 需复核'}</span>{!task && <small>问题：{result.query}</small>}<h3>{result.source.text}</h3><small>{displayName(result.source)} · {dateLabel(result.source.sentAt)}</small><p>{task ? '这是一条近期、未标记为已满或取消的协调请求。' : '卡片仅引用这条原始消息作为候选答案，发布前请人工核对适用条件与时效。'}</p>{task && <footer>就此需求发起即时对话 <b>›</b></footer>}</article>{!task && <button className="knowledge-save" disabled={saved} onClick={() => { onSaveKnowledge(); setSaved(true) }}>{saved ? '已保存为本地知识草稿' : '保存为知识草稿'}</button>}{result.related.length > 0 && <div className="source-list"><b>相关原消息</b>{result.related.map(message => <p key={message.id}>{displayName(message)} · {dateLabel(message.sentAt)}<br />{message.text}</p>)}</div>}<p className="sheet-note">每个结论均显示原始发送人、时间和内容；打开即时对话不会通知对方。</p></section></div> }
-function ImportSheet({ onClose, onImport }: { onClose: () => void; onImport: (items: ImportedMessage[]) => void }) { const [value, setValue] = useState(''); const [notice, setNotice] = useState(''); const submit = () => { const items = parseWechatText(value); if (!items.length) { setNotice('没有识别到文字消息。请确认每条记录依次是昵称、日期时间、内容。'); return } onImport(items) }; return <div className="scrim"><section className="sheet import-sheet" role="dialog" aria-modal="true" aria-label="导入群消息"><div className="handle" /><div className="sheet-head"><div><span className="eyebrow">仅保存在这台设备的浏览器中</span><h2>粘贴群消息</h2></div><button onClick={onClose} aria-label="关闭">×</button></div><p className="import-hint">从微信复制文字后直接粘贴。格式为：昵称、日期时间、内容；图片和表情占位符会自动略过。</p><textarea className="import-textarea" value={value} onChange={event => { setValue(event.target.value); setNotice('') }} placeholder={'用户A\n2026/09/11 7:13\n测试内容'} /><p className="import-notice">{notice || '请先取得相关群成员同意，并避免导入联系方式等敏感信息。'}</p><button className="import-button" onClick={submit}>导入文字消息</button></section></div> }
-function InstantChat({ source, onBack }: { source: Message; onBack: () => void }) { const [chat, setChat] = useState<ConversationMessage[]>(loadChat); const name = displayName(source); const [text, setText] = useState(`嗨！我想确认一下：${source.text}`); useEffect(() => { localStorage.setItem(CHAT_KEY, JSON.stringify(chat)) }, [chat]); const send = () => { if (!text.trim()) return; const entry = { id: String(Date.now()), sender: 'me' as const, text: text.trim(), sentAt: DEMO_NOW }; setChat(items => [...items, entry]); setText('') }; return <main className="app instant-page"><header className="chat-header"><button className="back" onClick={onBack} aria-label="返回">‹</button><div><h1>{name}</h1><p>即时对话 · 演示模式</p></div><button className="menu" aria-label="更多">•••</button></header><section className="request-pin"><span>来自 {GROUP.name} · 原始群消息</span><strong>{source.text}</strong><small>{name} · {dateLabel(source.sentAt)}</small></section><section className="chat-thread"><p className="private-label">此对话不会出现在群聊中</p>{chat.length === 0 && <div className="chat-empty"><b>准备好开始对话</b><span>编辑下方开场白后发送。演示不会向微信或真实用户发送消息。</span></div>}{chat.map(item => <ChatBubble key={item.id} item={item} />)}</section><section className="instant-composer"><button aria-label="更多">＋</button><textarea value={text} aria-label="即时对话消息" onChange={e => setText(e.target.value)} /><button className="send" onClick={send} disabled={!text.trim()}>发送</button></section></main> }
-function ChatBubble({ item }: { item: ConversationMessage }) { const mine = item.sender === 'me'; return <div className={`bubble-row ${mine ? 'mine' : ''}`}><div className="chat-avatar" style={{ background: mine ? '#1595e9' : '#e0a13e' }}>{mine ? '你' : 'RS'}</div><div className="bubble">{item.text}</div></div> }
