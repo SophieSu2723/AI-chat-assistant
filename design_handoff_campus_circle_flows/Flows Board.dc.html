@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/industry-2b20dc83-8b9b-4a6e-a0cd-7a3d31a2a634/styles.css">
+<script src="_ds/industry-2b20dc83-8b9b-4a6e-a0cd-7a3d31a2a634/_ds_bundle.js"></script>
+<style>body{margin:0;background:#e6e6e8}a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-800)}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55);max-width:390px}.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:34px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}.dv-group{font:600 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(0,0,0,.5);margin:36px 0 14px}</style>
+</helmet>
+
+<section class="dv-turn" id="t0" style="padding-bottom:24px">
+  <div style="max-width:880px;font:14px/1.55 system-ui,sans-serif;color:#1a1a1a;display:flex;flex-direction:column;gap:10px">
+    <div style="font:600 22px/1.2 system-ui,sans-serif">Campus Circle: refined flows (options board)</div>
+    <div style="color:rgba(0,0,0,.65);text-wrap:pretty">This board compares options for five screens. The chat chrome (header, bubbles, composer, blue send button) comes from <code>src/styles.css</code>. The AI surfaces (sheets, source viewer, cards, pinned request) use Industry: square hairline frames, corner marks, Barlow type, steel accent. Content comes from <code>fixtures.ts</code>. The copy here is in English. The prototype will add the 中文 / EN toggle.</div>
+    <div style="color:rgba(0,0,0,.65)"><b>Decisions I made for skipped questions:</b> the source viewer defaults to a stacked sheet (alternatives in <a class="dv-oid" href="#1b">1b</a> and <a class="dv-oid" href="#1c">1c</a>). Reviewer mode is a header switch labeled "simulated". Simulated replies are shown, with a label. Ongoing chats and Group knowledge are reached through tabs under the group header.</div>
+  </div>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Round 1: five screens, 2–3 options each</span></div>
+
+  <div class="dv-group" style="margin-top:0">Source viewer: the thread behind a result (m-201 → m-210)</div>
+  <div class="dv-opts">
+
+    <!-- 1a stacked sheet -->
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Stacked sheet. Opens on top of the result sheet, and closing it returns you there. The cited message is framed, and later corrections are tagged.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;position:relative;overflow:hidden;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#1f2024">
+          <div style="height:44px;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;background:#fff">9:41</div>
+          <div style="height:56px;background:#fff;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #ededed"><span style="font-size:34px;line-height:1">‹</span><div><div style="font-size:18px;font-weight:650">Campus Circle · Fall 2026</div><div style="font-size:11px;color:#8d8d91">24 online</div></div></div>
+          <div style="position:absolute;inset:0;background:#0005"></div>
+          <div style="position:absolute;left:10px;right:10px;top:96px;height:60px;background:var(--color-neutral-200);border-top:1px solid var(--color-divider)"></div>
+          <div style="position:absolute;left:0;right:0;top:112px;bottom:0;background:var(--color-bg);font-family:var(--font-body);border-top:1px solid var(--color-divider);display:flex;flex-direction:column">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 14px 16px 10px">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+              <div style="flex:1"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Source · private to you</div><div style="font-family:var(--font-heading);font-weight:600;font-size:22px;line-height:1.1">Original discussion</div></div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </div>
+            <div style="padding:0 16px;font-size:12px;color:var(--color-neutral-700);display:flex;gap:6px;align-items:center"><span class="tag tag-neutral">Campus Circle</span><span>4 messages · Sep 2 – Sep 14</span></div>
+            <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:14px">
+              <div style="display:grid;grid-template-columns:28px 1fr;gap:10px">
+                <div style="width:28px;height:28px;border-radius:50%;background:#5d8ed5;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center">ZL</div>
+                <div><div style="font-size:12px;color:var(--color-neutral-700)"><b style="color:var(--color-text)">Zoe Liu</b> · 9/2 09:10 · Question</div><div style="font-size:14px;line-height:1.45">How can I get to Costco without a car?</div></div>
+              </div>
+              <div class="blueprint" style="padding: 12px; display: grid; grid-template-columns: 28px 1fr; gap: 10px; justify-content: flex-start; align-items: stretch; position: static; background-color: var(--color-surface); border-width: 0.5px; border-style: none; border-color: #000000; border-radius: 7px">
+                
+                <div style="width:28px;height:28px;border-radius:50%;background:#ee7662;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center">MC</div>
+                <div><div style="font-size:12px;color:var(--color-neutral-700)"><b style="color:var(--color-text)">Mia Chen</b> · 9/2 09:25 · <span style="color:var(--color-accent-700)">Cited in claims 1–2</span></div><div style="font-size:14px;line-height:1.45">From campus, take bus 6 to Central Station, then the 118 toward Costco. It takes about 45–55 minutes; the transfer is indoors. Check the weekend timetable because service is every 30 minutes.</div></div>
+              </div>
+              <div style="display:grid;grid-template-columns:28px 1fr;gap:10px">
+                <div style="width:28px;height:28px;border-radius:50%;background:#e2a940;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center">RS</div>
+                <div><div style="font-size:12px;color:var(--color-neutral-700)"><b style="color:var(--color-text)">Ravi Shah</b> · 9/2 09:29</div><div style="font-size:14px;line-height:1.45">The 118 stop is on the east side of Costco, near the pharmacy entrance.</div></div>
+              </div>
+              <div style="display:grid;grid-template-columns:28px 1fr;gap:10px">
+                <div style="width:28px;height:28px;border-radius:50%;background:#4da7a0;color:#fff;font-size:9px;font-weight:700;display:grid;place-items:center">LW</div>
+                <div><div style="font-size:12px;color:var(--color-neutral-700);display:flex;gap:6px;align-items:center"><b style="color:var(--color-text)">Leo Wang</b> · 9/14 13:40 <span class="tag tag-outline" style="padding: 1px 6px; font-size: 10px; border-radius: 7px">Correction to Mia</span></div><div style="font-size:14px;line-height:1.45">The 118 route changed this semester: the Central Station transfer is now outdoors and buses run hourly on Sundays.</div></div>
+              </div>
+            </div>
+            <div style="padding:12px 16px 30px;border-top:1px solid var(--color-divider);display:flex;gap:8px">
+              <button class="btn btn-secondary" style="flex: 1; height: 42px; border-radius: 7px">Jump to in group</button>
+              <button class="btn btn-primary blueprint" style="flex: 1; height: 42px; position: static; border-radius: 7px">Back to card</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1b full screen timeline -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Full-screen page. A timeline rail joins the replies, the gap in days is shown, and older context is folded into one row.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;position:relative;overflow:hidden;background:var(--color-bg);font-family:var(--font-body);color:var(--color-text);display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;font-family:-apple-system,system-ui">9:41</div>
+          <div style="flex:none;display:flex;align-items:center;gap:10px;padding:6px 16px 14px;border-bottom:1px solid var(--color-divider)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            <div style="flex:1"><div style="font-family:var(--font-heading);font-weight:600;font-size:22px;line-height:1.1">Source thread</div><div style="font-size:12px;color:var(--color-neutral-700)">Campus Circle · private view · nobody is notified</div></div>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:18px 16px 0 16px">
+            <div style="font-size:12px;color:var(--color-accent-700);padding:0 0 14px 38px">Show 2 earlier messages ↑</div>
+            <div style="display:grid;grid-template-columns:24px 1fr;column-gap:14px">
+              <div style="display:flex;flex-direction:column;align-items:center"><div style="width:9px;height:9px;border:1px solid var(--color-neutral-600);background:var(--color-bg);margin-top:5px"></div><div style="flex:1;width:1px;background:var(--color-divider)"></div></div>
+              <div style="padding-bottom:18px"><div style="font-size:12px;color:var(--color-neutral-700)"><b style="color:var(--color-text)">Zoe Liu</b> · Sep 2, 09:10</div><div style="font-size:15px">How can I get to Costco without a car?</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center"><div style="width:9px;height:9px;background:var(--color-accent);margin-top:5px"></div><div style="flex:1;width:1px;background:var(--color-divider)"></div></div>
+              <div style="padding-bottom:18px">
+                <div class="blueprint" style="padding: 12px; border-color: var(--color-accent); border-style: none; background-color: var(--color-surface); position: static; border-radius: 7px">
+                  <div style="font-size:12px;color:var(--color-neutral-700)"><b style="color:var(--color-text)">Mia Chen</b> · Sep 2, 09:25</div>
+                  <div style="font-size:15px;line-height:1.45">From campus, take bus 6 to Central Station, then the 118 toward Costco. It takes about 45–55 minutes; <span style="text-decoration:line-through;text-decoration-color:var(--color-accent)">the transfer is indoors</span>. Check the weekend timetable because <span style="text-decoration:line-through;text-decoration-color:var(--color-accent)">service is every 30 minutes</span>.</div>
+                  <div style="font-size:11px;color:var(--color-accent-700);margin-top:6px">2 details later corrected by Leo ↓</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center"><div style="width:9px;height:9px;border:1px solid var(--color-neutral-600);background:var(--color-bg);margin-top:5px"></div><div style="flex:1;width:1px;background:var(--color-divider)"></div></div>
+              <div style="padding-bottom:18px"><div style="font-size:12px;color:var(--color-neutral-700)"><b style="color:var(--color-text)">Ravi Shah</b> · Sep 2, 09:29</div><div style="font-size:15px">The 118 stop is on the east side of Costco, near the pharmacy entrance.</div></div>
+              <div></div>
+              <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600);padding:0 0 14px">12 days later</div>
+              <div style="display:flex;flex-direction:column;align-items:center"><div style="width:9px;height:9px;border:1px solid var(--color-accent);background:var(--color-accent-200);margin-top:5px"></div></div>
+              <div><div style="font-size:12px;color:var(--color-neutral-700);display:flex;align-items:center;gap:6px"><b style="color:var(--color-text)">Leo Wang</b> · Sep 14, 13:40 <span class="tag tag-accent" style="padding:1px 6px;font-size:10px">Correction</span></div><div style="font-size:15px">The 118 route changed this semester: the Central Station transfer is now outdoors and buses run hourly on Sundays.</div></div>
+            </div>
+          </div>
+          <div style="flex:none;padding:12px 16px 30px;border-top:1px solid var(--color-divider)"><button class="btn btn-secondary" style="width: 100%; height: 42px; border-radius: 7px">Open in group chat</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1c inline expand -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Inline expand. Tapping a claim's source chip opens the quote under the claim. Nothing is stacked, and the thread is one tap further.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;position:relative;overflow:hidden;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#1f2024">
+          <div style="height:44px;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;background:#fff">9:41</div>
+          <div style="position:absolute;inset:0;background:#0005"></div>
+          <div style="position:absolute;left:0;right:0;top:84px;bottom:0;background:var(--color-bg);font-family:var(--font-body);border-top:1px solid var(--color-divider);padding:10px 16px 0">
+            <div style="height:4px;width:36px;background:var(--color-neutral-400);margin:0 auto 14px"></div>
+            <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Group knowledge · draft</div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.1;margin:4px 0 14px">How do I get to Costco without a car?</div>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;line-height:1.45">
+              <div style="display:grid;grid-template-columns:18px 1fr;gap:8px"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">1</span><div>Take bus 6 from campus to Central Station, then the 118 toward Costco. <span class="tag tag-accent" style="padding:1px 6px;font-size:10px;border:1px solid var(--color-accent)">Mia · Sep 2 ▴</span>
+                <div class="blueprint" style="margin-top: 8px; padding: 10px 12px; border-color: var(--color-accent); border-radius: 7px; position: static">
+                  <div style="font-size:12px;color:var(--color-neutral-700)"><b style="color:var(--color-text)">Mia Chen</b> · 9/2 09:25</div>
+                  <div style="font-size:13px">“From campus, take bus 6 to Central Station, then the 118 toward Costco. It takes about 45–55 minutes…”</div>
+                  <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px"><span style="color:var(--color-neutral-700)">+2 replies, 1 correction</span><a href="#" style="font-weight:500">View thread ›</a></div>
+                </div></div></div>
+              <div style="display:grid;grid-template-columns:18px 1fr;gap:8px"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">2</span><div>About 45–55 minutes door to door. <span class="tag tag-neutral" style="padding:1px 6px;font-size:10px">Mia · Sep 2 ▾</span></div></div>
+              <div style="display:grid;grid-template-columns:18px 1fr;gap:8px"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">3</span><div>The 118 stop is on the east side, near the pharmacy entrance. <span class="tag tag-neutral" style="padding:1px 6px;font-size:10px">Ravi · Sep 2 ▾</span></div></div>
+              <div style="display:grid;grid-template-columns:18px 1fr;gap:8px"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">4</span><div>The transfer is now outdoors, and Sunday buses run hourly. <span class="tag tag-neutral" style="padding:1px 6px;font-size:10px">Leo · Sep 14 ▾</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dv-group">Knowledge card anatomy</div>
+  <div class="dv-opts">
+
+    <!-- 2a -->
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Reading order: answer first. Claims are numbered with a source chip on each. Applicability sits in three equal cells, and the three dates are kept separate.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;overflow:hidden;background:var(--color-bg);font-family:var(--font-body);color:var(--color-text);display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;font-family:-apple-system,system-ui">9:41</div>
+          <div style="flex:none;display:flex;align-items:center;gap:10px;padding:4px 16px 12px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            <span style="flex:1;font-size:12px;color:var(--color-neutral-700)">Group knowledge</span>
+            <span class="tag tag-neutral">Draft · private</span>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:0 16px;display:flex;flex-direction:column;gap:16px">
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:28px;line-height:1.05">How do I get to Costco without a car?</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.45">
+              <div style="display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">1</span><span>Bus 6 from campus to Central Station, then the 118 toward Costco.</span><span class="tag tag-accent" style="padding:1px 6px;font-size:10px">Mia</span></div>
+              <div style="display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">2</span><span>About 45–55 minutes in total.</span><span class="tag tag-accent" style="padding:1px 6px;font-size:10px">Mia</span></div>
+              <div style="display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">3</span><span>The 118 stop is on the east side, by the pharmacy entrance.</span><span class="tag tag-accent" style="padding:1px 6px;font-size:10px">Ravi</span></div>
+              <div style="display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">4</span><span>Transfer is outdoors; Sunday buses run hourly.</span><span class="tag tag-accent" style="padding:1px 6px;font-size:10px">Leo</span></div>
+            </div>
+            <div class="blueprint" style="display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); position: static; border-radius: 7px">
+              <div style="padding:10px"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">From</div><div style="font-family:var(--font-heading);font-size:16px">Campus</div></div>
+              <div style="padding:10px;border-left:1px solid var(--color-divider)"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Term</div><div style="font-family:var(--font-heading);font-size:16px">Fall 2026</div></div>
+              <div style="padding:10px;border-left:1px solid var(--color-divider)"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Days</div><div style="font-family:var(--font-heading);font-size:16px">Sun differs</div></div>
+            </div>
+            <div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-bottom:4px">Not covered by the group</div><div style="font-size:13px;color:var(--color-neutral-800)">Fare · Saturday frequency after the route change</div></div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-size:11px;color:var(--color-neutral-700)">
+              <div><div style="text-transform:uppercase;letter-spacing:.08em">Sources</div><div style="color:var(--color-text);font-size:13px">Sep 2 – 14</div></div>
+              <div><div style="text-transform:uppercase;letter-spacing:.08em">Generated</div><div style="color:var(--color-text);font-size:13px">Sep 17</div></div>
+              <div><div style="text-transform:uppercase;letter-spacing:.08em">Reviewed</div><div style="color:var(--color-text);font-size:13px">Not yet</div></div>
+            </div>
+          </div>
+          <div style="flex:none;padding:12px 16px 30px;border-top:1px solid var(--color-divider);display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <button class="btn btn-secondary" style="height: 40px; border-radius: 7px">Save</button>
+            <button class="btn btn-secondary" style="height: 40px; border-radius: 7px">Correct</button>
+            <button class="btn btn-primary blueprint" style="height: 40px; position: static; border-radius: 7px">Ask follow-up</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2b spec sheet -->
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Spec-sheet plate. Claims are rows in a numbered table that shows who said each one and when, so an outdated source stands out in the date column.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;overflow:hidden;background:var(--color-bg);font-family:var(--font-body);color:var(--color-text);display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;font-family:-apple-system,system-ui">9:41</div>
+          <div style="flex:1;overflow:hidden;padding:4px 16px 0;display:flex;flex-direction:column;gap:14px">
+            <div class="blueprint" style="padding:14px;border-radius:7px">
+              <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)"><span>KC-014 · v1 draft</span><span>Campus Circle</span></div>
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1.05;margin-top:6px">How do I get to Costco without a car?</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"><span class="tag tag-outline">From campus</span><span class="tag tag-outline">Fall 2026</span><span class="tag tag-outline">No car</span></div>
+            </div>
+            <table class="table" style="font-size:13px">
+              <thead><tr><th style="width:18px">#</th><th>Claim</th><th style="width:70px">Source</th></tr></thead>
+              <tbody>
+                <tr><td style="font-family:var(--font-heading)">1</td><td>Bus 6 → Central Station → 118 toward Costco</td><td><div>Mia</div><div style="font-size:11px;color:var(--color-neutral-600)">Sep 2</div></td></tr>
+                <tr><td style="font-family:var(--font-heading)">2</td><td>45–55 minutes total</td><td><div>Mia</div><div style="font-size:11px;color:var(--color-neutral-600)">Sep 2</div></td></tr>
+                <tr><td style="font-family:var(--font-heading)">3</td><td>118 stop: east side, pharmacy entrance</td><td><div>Ravi</div><div style="font-size:11px;color:var(--color-neutral-600)">Sep 2</div></td></tr>
+                <tr><td style="font-family:var(--font-heading)">4</td><td>Transfer outdoors; Sunday buses hourly</td><td><div>Leo</div><div style="font-size:11px;color:var(--color-neutral-600)">Sep 14</div></td></tr>
+              </tbody>
+            </table>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--color-divider)">
+              <div style="padding:10px"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Unknowns</div><div style="font-size:13px">Fare; Saturday frequency</div></div>
+              <div style="padding:10px;border-left:1px solid var(--color-divider)"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Disagreements</div><div style="font-size:13px">None recorded</div></div>
+            </div>
+            <div style="font-size:12px;color:var(--color-neutral-700)">Sources Sep 2–14 · Generated Sep 17 · Not reviewed</div>
+          </div>
+          <div style="flex:none;padding:12px 16px 30px;border-top:1px solid var(--color-divider);display:flex;gap:8px">
+            <button class="btn btn-secondary" style="height:40px;flex:1;border-radius:7px">View discussion</button>
+            <button class="btn btn-primary blueprint" style="height:40px;flex:1;border-radius:7px">Ask a follow-up</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2c compact in-sheet -->
+    <div class="dv-opt" id="2c">
+      <div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Compact suggestion. This is the card as it first appears over the composer, with the answer, sources and one action. The full anatomy opens on demand, and your draft stays in place.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;position:relative;overflow:hidden;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#1f2024;display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;background:#fff">9:41</div>
+          <div style="height:56px;flex:none;background:#fff;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #ededed"><span style="font-size:34px;line-height:1">‹</span><div><div style="font-size:18px;font-weight:650">Campus Circle · Fall 2026</div><div style="font-size:11px;color:#8d8d91">24 online</div></div></div>
+          <div style="flex:1;padding:18px 17px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;gap:9px"><div style="width:37px;height:37px;border-radius:50%;background:#ba699b;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center">NK</div><div><div style="font-size:13px;color:#8d8d91;margin:1px 0 5px">Noah Kim <span style="font-size:10px;color:#b0b0b4">9/17 09:00</span></div><div style="background:#fff;border-radius:4px 15px 15px 15px;padding:10px 13px;font-size:16px;line-height:1.45">I went grocery shopping last weekend—the checkout line was long.</div></div></div>
+          </div>
+          <div style="position:absolute;inset:0;background:#0005"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:var(--color-bg);font-family:var(--font-body);border-top:1px solid var(--color-divider);padding:10px 16px 0">
+            <div style="height:4px;width:36px;background:var(--color-neutral-400);margin:0 auto 12px"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">This group has discussed this</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></div>
+            <div class="blueprint" style="padding:14px;margin:12px 0;border-radius:7px">
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.1">How do I get to Costco without a car?</div>
+              <div style="font-size:14px;line-height:1.45;margin-top:6px">Bus 6 to Central Station, then the 118. Around 45–55 min. Sunday buses are hourly.</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--color-neutral-700)"><span style="display:flex"><span style="width:18px;height:18px;border-radius:50%;background:#ee7662;border:1.5px solid var(--color-bg)"></span><span style="width:18px;height:18px;border-radius:50%;background:#e2a940;border:1.5px solid var(--color-bg);margin-left:-5px"></span><span style="width:18px;height:18px;border-radius:50%;background:#4da7a0;border:1.5px solid var(--color-bg);margin-left:-5px"></span></span>3 sources · Sep 2–14 · Draft, not reviewed</div>
+              <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--color-divider);font-size:13px"><span style="color:var(--color-accent-700);font-weight:500">Open full card ›</span><span style="color:var(--color-neutral-700)">Save</span></div>
+            </div>
+            <div style="font-size:12px;color:var(--color-neutral-700);padding-bottom:10px">Only you see this. You can still send your question to the group.</div>
+            <div style="margin:0 -16px;background:#eef0f3;border-top:1px solid #e4e5e7;padding:8px 10px 26px;display:flex;gap:7px;align-items:flex-end;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif">
+              <span style="font-size:25px;width:32px;height:38px;text-align:center">＋</span>
+              <div style="flex:1;background:#fff;border-radius:7px;min-height:38px;padding:9px;font-size:15px;line-height:20px">How do I get to Costco without a car?</div>
+              <span style="background:#1596e9;color:#fff;border-radius:5px;height:38px;padding:0 12px;display:grid;place-items:center;font-size:15px">Send</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dv-group">Needs-review / correction state</div>
+  <div class="dv-opts">
+
+    <!-- 3a -->
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>Card-level warning. A banner on top shows what the card says next to what the new message says. The card stays readable but is dropped from default suggestions.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;overflow:hidden;background:var(--color-bg);font-family:var(--font-body);color:var(--color-text);display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;font-family:-apple-system,system-ui">9:41</div>
+          <div style="flex:none;display:flex;align-items:center;gap:10px;padding:4px 16px 12px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            <span style="flex:1;font-size:12px;color:var(--color-neutral-700)">Group knowledge</span>
+            <span class="tag" style="background:var(--color-accent-900);color:var(--color-bg)">Needs review</span>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:0 16px;display:flex;flex-direction:column;gap:14px">
+            <div class="blueprint" style="border-color:var(--color-accent-700);padding:12px 14px;border-radius:7px">
+              <div style="display:flex;gap:8px;align-items:center;color:var(--color-accent-800)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><b style="font-size:14px">A newer message conflicts with this card</b></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;margin-top:10px;border:1px solid var(--color-divider)">
+                <div style="padding:8px 10px"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Card v1 · Sep 2</div><div style="font-size:13px">Transfer is indoors; buses every 30 min</div></div>
+                <div style="padding:8px 10px;border-left:1px solid var(--color-divider)"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Leo · Sep 14</div><div style="font-size:13px">Transfer now outdoors; Sundays hourly</div></div>
+              </div>
+              <div style="font-size:12px;color:var(--color-neutral-700);margin-top:8px">Not shown in automatic suggestions until a reviewer updates it.</div>
+            </div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1.05;color:var(--color-neutral-700)">How do I get to Costco without a car?</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.45;color:var(--color-neutral-800)">
+              <div style="display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline"><span style="font-family:var(--font-heading)">1</span><span>Bus 6 to Central Station, then the 118.</span><span class="tag tag-neutral" style="padding:1px 6px;font-size:10px">Mia</span></div>
+              <div style="display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline"><span style="font-family:var(--font-heading)">2</span><span>About 45–55 minutes; the transfer is indoors.</span><span class="tag tag-neutral" style="padding:1px 6px;font-size:10px">Mia</span></div>
+              <div style="display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline"><span style="font-family:var(--font-heading)">3</span><span>Weekend service every 30 minutes.</span><span class="tag tag-neutral" style="padding:1px 6px;font-size:10px">Mia</span></div>
+            </div>
+            <div style="font-size:12px;color:var(--color-neutral-700)">Published v1 · Reviewed Sep 10 by Leo (simulated) · Flagged Sep 14</div>
+          </div>
+          <div style="flex:none;padding:12px 16px 30px;border-top:1px solid var(--color-divider);display:flex;gap:8px">
+            <button class="btn btn-secondary" style="height:40px;flex:1;border-radius:7px">View Leo's message</button>
+            <button class="btn btn-secondary" style="height:40px;flex:1;border-radius:7px">Ask the group</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3b -->
+    <div class="dv-opt" id="3b">
+      <div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a>Claim-level flag, reviewer mode on. Only the affected claims are marked. The reviewer can accept the correction for each claim and then publish v2, and v1 is kept.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;overflow:hidden;background:var(--color-bg);font-family:var(--font-body);color:var(--color-text);display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;font-family:-apple-system,system-ui">9:41</div>
+          <div style="flex:none;display:flex;align-items:center;gap:10px;padding:4px 16px 12px;border-bottom:1px solid var(--color-divider)">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            <span style="flex:1;font-size:12px;color:var(--color-neutral-700)">Review · KC-014</span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-accent-800)">Reviewer mode <span style="font-size:10px;color:var(--color-neutral-600)">(simulated)</span><span style="width:30px;height:16px;background:var(--color-accent);position:relative"><span style="position:absolute;right:2px;top:2px;width:12px;height:12px;background:var(--color-bg)"></span></span></span>
+          </div>
+          <div style="flex:1;overflow:hidden;padding:14px 16px 0;display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;gap:6px"><span class="tag" style="background:var(--color-accent-900);color:var(--color-bg)">Needs review</span><span class="tag tag-neutral">2 of 3 claims affected</span></div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.05">How do I get to Costco without a car?</div>
+            <div style="display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:14px"><span style="font-family:var(--font-heading);color:var(--color-neutral-600)">1</span><span>Bus 6 to Central Station, then the 118. <span style="font-size:11px;color:var(--color-neutral-600)">Mia · Sep 2 · unchanged</span></span></div>
+            <div class="blueprint" style="padding:12px;border-color:var(--color-accent);border-radius:7px">
+              <div style="display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:14px"><span style="font-family:var(--font-heading);color:var(--color-accent-700)">2</span><div><div style="text-decoration:line-through;color:var(--color-neutral-600)">The transfer is indoors.</div><div>The Central Station transfer is outdoors.</div><div style="font-size:11px;color:var(--color-accent-700);margin-top:2px">From Leo · Sep 14</div></div></div>
+              <div style="display:flex;gap:6px;margin-top:10px;padding-left:24px"><button class="btn btn-secondary" style="height:30px;font-size:13px;border-radius:7px">Keep v1</button><button class="btn btn-secondary" style="height:30px;font-size:13px;border-color:var(--color-accent);color:var(--color-accent-800);border-radius:7px">✓ Use correction</button></div>
+            </div>
+            <div class="blueprint" style="padding:12px;border-color:var(--color-accent);border-radius:7px">
+              <div style="display:grid;grid-template-columns:16px 1fr;gap:8px;font-size:14px"><span style="font-family:var(--font-heading);color:var(--color-accent-700)">3</span><div><div style="text-decoration:line-through;color:var(--color-neutral-600)">Weekend service every 30 minutes.</div><div>Sunday buses run hourly. Saturday: not stated.</div><div style="font-size:11px;color:var(--color-accent-700);margin-top:2px">From Leo · Sep 14 · adds an unknown</div></div></div>
+              <div style="display:flex;gap:6px;margin-top:10px;padding-left:24px"><button class="btn btn-secondary" style="height:30px;font-size:13px;border-radius:7px">Keep v1</button><button class="btn btn-secondary" style="height:30px;font-size:13px;border-radius:7px">Use correction</button></div>
+            </div>
+            <div style="font-size:12px;color:var(--color-neutral-700)">v1 stays in version history. The review date changes only when you publish.</div>
+          </div>
+          <div style="flex:none;padding:12px 16px 30px;border-top:1px solid var(--color-divider)">
+            <button class="btn btn-primary blueprint" style="height:42px;width:100%;border-radius:7px">Publish v2 (1 of 2 decided)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dv-group">Temporary chat + pinned request</div>
+  <div class="dv-opts">
+
+    <!-- 4a -->
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Familiar thread with a pinned request frame. The request's status is stated plainly, and simulated replies carry a label.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;overflow:hidden;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#1f2024;display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;background:#fff">9:41</div>
+          <div style="height:56px;flex:none;background:#fff;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #ededed"><span style="font-size:34px;line-height:1">‹</span><div><div style="font-size:18px;font-weight:650">Ravi Shah</div><div style="font-size:11px;color:#8d8d91">Temporary chat · demo</div></div><span style="margin-left:auto;font-size:22px">•••</span></div>
+          <div class="blueprint" style="margin:12px 13px 4px;padding:11px 13px;background:var(--color-bg);font-family:var(--font-body);border-radius:7px">
+            <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)"><span>About this request · Campus Circle</span><span>9/17 14:05</span></div>
+            <div style="font-size:14px;margin:5px 0 8px;color:var(--color-text)">周日有人去 Trader Joe’s 吗？想搭车，时间还没定。</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag tag-accent">Sunday</span><span class="tag tag-accent">Trader Joe’s</span><span class="tag tag-neutral">Time not set</span><span class="tag tag-outline">Still looking? Unknown</span></div>
+          </div>
+          <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:12px">
+            <div style="text-align:center;color:#9d9da1;font-size:11px">This chat won't appear in the group</div>
+            <div style="display:flex;gap:8px;flex-direction:row-reverse"><div style="width:37px;height:37px;border-radius:50%;background:#7558d9;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;flex:none">Y</div><div style="max-width:75%;padding:10px 12px;background:#1596e9;color:#fff;border-radius:14px 4px 14px 14px;font-size:15px;line-height:1.45">Hi Ravi, I saw your Trader Joe’s request. I'm going Sunday afternoon too. Still looking for a ride?</div></div>
+            <div style="display:flex;gap:8px"><div style="width:37px;height:37px;border-radius:50%;background:#e2a940;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;flex:none">RS</div><div style="max-width:75%"><div style="padding:10px 12px;background:#fff;border-radius:4px 14px 14px 14px;font-size:15px;line-height:1.45">Yes! Around 3pm works for me.</div><div style="font-family:var(--font-body);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:4px">Simulated reply</div></div></div>
+          </div>
+          <div style="flex:none;background:#eef0f3;border-top:1px solid #e0e1e3;padding:10px 10px 26px;display:flex;gap:7px;align-items:flex-end">
+            <span style="font-size:25px;width:32px;height:38px;text-align:center">＋</span>
+            <div style="flex:1;background:#fff;border-radius:7px;min-height:38px;padding:9px;font-size:15px;color:#aaa">Message…</div>
+            <span style="background:#a9cce5;color:#fff;border-radius:5px;height:38px;padding:0 12px;display:grid;place-items:center;font-size:15px">Send</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4b -->
+    <div class="dv-opt" id="4b">
+      <div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a>Before sending: the opening message is a large editable draft, with a clear note that Ravi hasn't been notified. The chat is created only when you send.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;overflow:hidden;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#1f2024;display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;background:#fff">9:41</div>
+          <div style="height:56px;flex:none;background:#fff;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid #ededed"><span style="font-size:34px;line-height:1">‹</span><div><div style="font-size:18px;font-weight:650">Message Ravi Shah</div><div style="font-size:11px;color:#8d8d91">Draft · not sent</div></div></div>
+          <div style="flex:1;padding:14px 13px 0;display:flex;flex-direction:column;gap:14px;font-family:var(--font-body)">
+            <div style="padding:0 2px"><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600)">Replying to · 9/17 14:05 · Campus Circle</div><div style="font-size:15px;margin-top:4px;padding-left:10px;border-left:1px solid var(--color-accent)">周日有人去 Trader Joe’s 吗？想搭车，时间还没定。</div></div>
+            <div class="blueprint" style="background:var(--color-bg);padding:14px;border-radius:7px">
+              <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)">Opening message · editable</div>
+              <div style="font-size:16px;line-height:1.5;margin-top:6px;min-height:96px">Hi Ravi, I saw your Trader Joe’s request. I'm going Sunday afternoon too. Still looking for a ride?<span style="display:inline-block;width:1px;height:18px;background:var(--color-accent);vertical-align:middle;margin-left:1px"></span></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><span class="tag tag-outline">+ Ask what time</span><span class="tag tag-outline">+ Offer to split gas</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:20px 1fr;gap:8px;font-size:13px;color:var(--color-neutral-800)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="0"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              <div>Ravi hasn't been notified. This chat starts only when you send, and it stays out of the group feed.</div>
+            </div>
+          </div>
+          <div style="flex:none;padding:12px 16px 30px;display:flex;gap:8px;font-family:var(--font-body)">
+            <button class="btn btn-secondary" style="height:44px;flex:1;border-radius:7px">Cancel</button>
+            <button style="height:44px;flex:2;border:0;border-radius:5px;background:#1596e9;color:#fff;font-size:15px;font-family:-apple-system,system-ui">Send to Ravi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dv-group">Ongoing chats</div>
+  <div class="dv-opts">
+
+    <!-- 5a -->
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a>Tabs under the group header. The list is headed by the request, not the person, because the reason you talked is easier to remember than the name.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;overflow:hidden;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#1f2024;display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;background:#fff">9:41</div>
+          <div style="height:56px;flex:none;background:#fff;display:flex;align-items:center;gap:12px;padding:0 18px"><span style="font-size:34px;line-height:1;color:#8d8d91">‹</span><div><div style="font-size:18px;font-weight:650">Campus Circle · Fall 2026</div><div style="font-size:11px;color:#8d8d91">24 online</div></div></div>
+          <div style="flex:none;background:#fff;display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #ededed;font-size:14px;text-align:center">
+            <div style="padding:10px 0;color:#8d8d91">Group</div>
+            <div style="padding:10px 0;font-weight:600;box-shadow:inset 0 -2px 0 #1596e9">Chats · 2</div>
+            <div style="padding:10px 0;color:#8d8d91">Knowledge</div>
+          </div>
+          <div style="flex:1;font-family:var(--font-body);padding:14px 13px;display:flex;flex-direction:column;gap:14px">
+            <div class="blueprint" style="background:var(--color-bg);padding:12px 14px;display:grid;grid-template-columns:37px 1fr;gap:10px;border-radius:7px">
+              <div style="width:37px;height:37px;border-radius:50%;background:#e2a940;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;font-family:-apple-system,system-ui">RS</div>
+              <div style="min-width:0">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:var(--font-heading);font-weight:600;font-size:17px">Trader Joe’s · Sunday</span><span style="font-size:11px;color:var(--color-neutral-600)">18:24</span></div>
+                <div style="font-size:12px;color:var(--color-neutral-700)">with Ravi Shah</div>
+                <div style="font-size:14px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ravi: Yes! Around 3pm works for me.</div>
+                <div style="display:flex;gap:6px;margin-top:8px"><span class="tag tag-accent">Open</span><span class="tag tag-neutral">1 new · simulated</span></div>
+              </div>
+            </div>
+            <div class="blueprint" style="background:var(--color-bg);padding:12px 14px;display:grid;grid-template-columns:37px 1fr;gap:10px;opacity:.7;border-radius:7px">
+              <div style="width:37px;height:37px;border-radius:50%;background:#4da7a0;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;font-family:-apple-system,system-ui">LW</div>
+              <div style="min-width:0">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:var(--font-heading);font-weight:600;font-size:17px">Costco · Saturday 10:30</span><span style="font-size:11px;color:var(--color-neutral-600)">9/16</span></div>
+                <div style="font-size:12px;color:var(--color-neutral-700)">with Leo Wang</div>
+                <div style="font-size:14px;margin-top:4px">You: Is there still a seat?</div>
+                <div style="display:flex;gap:6px;margin-top:8px"><span class="tag tag-neutral">Full · marked by Leo 9/17</span></div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--color-neutral-700);text-align:center;margin-top:4px">Only chats you started from a request. Stored on this device.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5b -->
+    <div class="dv-opt" id="5b">
+      <div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a>Plain list, split into Active and Closed. A row shows the person first with the request below, in the familiar chat style, so it reads like the rest of the app.</div>
+      <div class="dv-card">
+        <div style="width:390px;height:844px;overflow:hidden;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;color:#1f2024;display:flex;flex-direction:column">
+          <div style="height:44px;flex:none;display:flex;align-items:center;padding:0 30px;font-weight:600;font-size:15px;background:#fff">9:41</div>
+          <div style="height:56px;flex:none;background:#fff;display:flex;align-items:center;gap:12px;padding:0 18px"><span style="font-size:34px;line-height:1;color:#8d8d91">‹</span><div><div style="font-size:18px;font-weight:650">Campus Circle · Fall 2026</div><div style="font-size:11px;color:#8d8d91">24 online</div></div></div>
+          <div style="flex:none;background:#fff;display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #ededed;font-size:14px;text-align:center">
+            <div style="padding:10px 0;color:#8d8d91">Group</div>
+            <div style="padding:10px 0;font-weight:600;box-shadow:inset 0 -2px 0 #1596e9">Chats · 2</div>
+            <div style="padding:10px 0;color:#8d8d91">Knowledge</div>
+          </div>
+          <div style="flex:1;background:#fff">
+            <div style="padding:14px 18px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8d8d91">Active</div>
+            <div style="display:grid;grid-template-columns:44px 1fr auto;gap:12px;padding:10px 18px;align-items:center;border-bottom:1px solid #f0f0f0">
+              <div style="width:44px;height:44px;border-radius:50%;background:#e2a940;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center">RS</div>
+              <div style="min-width:0"><div style="font-size:16px;font-weight:600">Ravi Shah</div><div style="font-size:12px;color:var(--color-accent-700);font-family:var(--font-body)">Re: Trader Joe’s · Sunday</div><div style="font-size:14px;color:#8d8d91;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Yes! Around 3pm works for me.</div></div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span style="font-size:11px;color:#b0b0b4">18:24</span><span style="min-width:18px;height:18px;border-radius:9px;background:#1596e9;color:#fff;font-size:11px;display:grid;place-items:center">1</span></div>
+            </div>
+            <div style="padding:18px 18px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#8d8d91">Closed</div>
+            <div style="display:grid;grid-template-columns:44px 1fr auto;gap:12px;padding:10px 18px;align-items:center;opacity:.6">
+              <div style="width:44px;height:44px;border-radius:50%;background:#4da7a0;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center">LW</div>
+              <div style="min-width:0"><div style="font-size:16px;font-weight:600">Leo Wang</div><div style="font-size:12px;color:#8d8d91;font-family:var(--font-body)">Re: Costco · Saturday · car full</div><div style="font-size:14px;color:#8d8d91">You: Is there still a seat?</div></div>
+              <span style="font-size:11px;color:#b0b0b4">9/16</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="dv-next">Try next: "go with <a class="dv-oid" href="#1a">1a</a>, <a class="dv-oid" href="#2a">2a</a>, <a class="dv-oid" href="#3b">3b</a>, <a class="dv-oid" href="#4b">4b</a>→<a class="dv-oid" href="#4a">4a</a>, <a class="dv-oid" href="#5a">5a</a> and build the prototype" · "<a class="dv-oid" href="#2a">2a</a> with the table from <a class="dv-oid" href="#2b">2b</a>" · "more options for the mixed-intent sheet"</p>
+</section>
+
+</x-dc>
+</body>
+</html>
